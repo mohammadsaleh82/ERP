@@ -98,8 +98,9 @@ public sealed class VoucherTestHarness : IDisposable
     {
         var db = NewDbContext();
         var numbering = new VoucherNumberingService(db);
+        var snapshots = new BalanceSnapshotService(db);
         var docs = new DocumentService(db, numbering, new CreateDocumentRequestValidator(), new UpdateDocumentRequestValidator());
-        var engine = new VoucherPostingEngine(db, numbering, Clock);
+        var engine = new VoucherPostingEngine(db, numbering, snapshots, Clock);
         return (docs, engine, db);
     }
 
@@ -142,7 +143,7 @@ public sealed class VoucherTestHarness : IDisposable
         return settings;
     }
 
-    public Account SeedPostingAccount(string code, string name, bool isActive = true, Guid? companyId = null)
+    public Account SeedPostingAccount(string code, string name, bool isActive = true, Guid? companyId = null, AccountNature nature = AccountNature.Asset)
     {
         var targetCompanyId = companyId ?? CompanyId;
         var rootCode = code[..2]; // گروه: «۱۰»
@@ -160,7 +161,7 @@ public sealed class VoucherTestHarness : IDisposable
 
         if (root is null)
         {
-            root = Account.CreateRoot(TenantId, targetCompanyId, rootCode, $"گروه {rootCode}", AccountNature.Asset);
+            root = Account.CreateRoot(TenantId, targetCompanyId, rootCode, $"گروه {rootCode}", nature);
             db.Accounts.Add(root);
             db.SaveChanges();
         }

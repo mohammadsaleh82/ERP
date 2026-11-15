@@ -101,10 +101,11 @@ public class DocumentService : IDocumentService
 
         fiscalPeriod.EnsureCanAcceptTransactions();
 
+        // شماره سند پیوسته در سطح سال مالی است (ایندکس یکتای شماره سند سالانه)؛ دوره فقط تاریخ سند را کنترل می‌کند
         var documentNumber = await _numberingService.NextNumberAsync(
             command.TenantId, command.CompanyId, fiscalYear.Id,
             sequenceType: VoucherSequenceTypes.Voucher,
-            periodId: fiscalPeriod.Id,
+            periodId: null,
             cancellationToken);
 
         var doc = new AccountingDocument(

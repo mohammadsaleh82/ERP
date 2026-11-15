@@ -91,3 +91,5 @@ dotnet test tests/ERP.IntegrationTests/ --filter "FullyQualifiedName~VoucherConc
 - `tests/ERP.IntegrationTests/VoucherPostingIntegrationTests.cs` — سناریوهای ۱ تا ۹ و ۱۱ تا ۱۵ روی پایگاه‌داده
 - `tests/ERP.IntegrationTests/VoucherConcurrencyPostgresTests.cs` — سناریو ۱۰ (هم‌زمانی) روی PostgreSQL واقعی
 - `tests/ERP.SecurityTests/VoucherSecurityTests.cs` — گاردهای امنیتی سند و مجوزها
+- `tests/ERP.IntegrationTests/LedgerReportingIntegrationTests.cs` — ۱۲ سناریوی دفتر روزنامه/کل/معین و موتور مانده (PROMPT 05)
+- `tests/ERP.IntegrationTests/LedgerPerformanceTests.cs` — تست کارایی با دیتاست ۱۰۰۰ سند / ۲۰۰۰ سطر دفتر کل

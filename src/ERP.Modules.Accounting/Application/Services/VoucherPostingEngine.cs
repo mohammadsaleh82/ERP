@@ -33,15 +33,18 @@ public class VoucherPostingEngine : IVoucherPostingEngine
 {
     private readonly AccountingDbContext _db;
     private readonly IVoucherNumberingService _numberingService;
+    private readonly IBalanceSnapshotService _balanceSnapshotService;
     private readonly IClock _clock;
 
     public VoucherPostingEngine(
         AccountingDbContext db,
         IVoucherNumberingService numberingService,
+        IBalanceSnapshotService balanceSnapshotService,
         IClock clock)
     {
         _db = db;
         _numberingService = numberingService;
+        _balanceSnapshotService = balanceSnapshotService;
         _clock = clock;
     }
 
@@ -129,6 +132,12 @@ public class VoucherPostingEngine : IVoucherPostingEngine
                 command.PerformedBy,
                 $"قطعی‌سازی سند {doc.DocumentNumber} با مبلغ {doc.TotalDebit:N4}",
                 nowUtc));
+
+            // ۱۲. انبارش گردش‌ها روی اسنپ‌شات مانده حساب‌ها (Materialized Read Model) در همان تراکنش
+            await _balanceSnapshotService.ApplyAsync(
+                _db, doc.TenantId, doc.CompanyId, doc.FiscalYearId, fiscalPeriod.Id,
+                doc.Lines.Select(l => (l.AccountId, l.DebitAmount, l.CreditAmount)).ToList(),
+                cancellationToken);
 
             await _db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
@@ -231,11 +240,11 @@ public class VoucherPostingEngine : IVoucherPostingEngine
 
             fiscalPeriod.EnsureCanAcceptTransactions();
 
-            // ۴. صدور شماره سند معکوس از همان سریال اسناد سال مالی (شماره سند باید در کل سال یکتا باشد)
+            // ۴. صدور شماره سند معکوس از همان سریال پیوسته سال مالی (شماره سند در کل سال یکتاست)
             var reversalNumber = await _numberingService.NextNumberAsync(
                 original.TenantId, original.CompanyId, original.FiscalYearId,
                 sequenceType: VoucherSequenceTypes.Voucher,
-                periodId: fiscalPeriod.Id,
+                periodId: null,
                 cancellationToken);
 
             var reversalDescription = !string.IsNullOrWhiteSpace(command.Description)
@@ -274,6 +283,12 @@ public class VoucherPostingEngine : IVoucherPostingEngine
                 command.PerformedBy,
                 $"ایجاد سند معکوس {reversalNumber} برای سند {original.DocumentNumber}",
                 nowUtc));
+
+            // انبارش گردش‌های سند معکوس روی اسنپ‌شات‌ها در همان تراکنش
+            await _balanceSnapshotService.ApplyAsync(
+                _db, reversal.TenantId, reversal.CompanyId, reversal.FiscalYearId, fiscalPeriod.Id,
+                reversal.Lines.Select(l => (l.AccountId, l.DebitAmount, l.CreditAmount)).ToList(),
+                cancellationToken);
 
             await _db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);

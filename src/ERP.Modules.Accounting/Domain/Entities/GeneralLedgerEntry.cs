@@ -9,7 +9,9 @@ namespace ERP.Modules.Accounting.Domain.Entities;
 /// سطر دفتر کل (General Ledger Entry).
 /// هر سطر در لحظه قطعی‌سازی سند، با ارجاع مستقیم به سند و ردیف مبدأ ایجاد می‌شود تا
 /// هیچ مانده مالی بدون منبع قابل ردیابی ایجاد نشود.
-/// این رکورد پس از ایجاد تغییرناپذیر است و فقط با سند معکوس اصلاح می‌شود.
+/// این رکورد پس از ایجاد تغییرناپذیر است: هیچ مسیری اجازه UPDATE یا DELETE سطرهای
+/// دفتر کل را ندارد و اصلاح تنها با سند معکوس (Storno) به‌صورت سطرهای جدید انجام می‌شود.
+/// گارد پایگاه‌داده‌ای این قاعده در <see cref="AccountingDbContext"/> اعمال می‌شود.
 /// </summary>
 public class GeneralLedgerEntry : Entity, ITenantScoped, ICompanyScoped, IAuditableEntity
 {
@@ -17,6 +19,7 @@ public class GeneralLedgerEntry : Entity, ITenantScoped, ICompanyScoped, IAudita
     public Guid CompanyId { get; set; }
     public Guid FiscalYearId { get; set; }
     public Guid FiscalPeriodId { get; set; }
+    public Guid? BranchId { get; set; }
 
     public Guid DocumentId { get; set; }
     public Guid DocumentLineId { get; set; }
@@ -74,6 +77,7 @@ public class GeneralLedgerEntry : Entity, ITenantScoped, ICompanyScoped, IAudita
             CompanyId = document.CompanyId,
             FiscalYearId = document.FiscalYearId,
             FiscalPeriodId = fiscalPeriodId,
+            BranchId = document.BranchId,
             DocumentId = document.Id,
             DocumentLineId = line.Id,
             DocumentNumber = document.DocumentNumber,

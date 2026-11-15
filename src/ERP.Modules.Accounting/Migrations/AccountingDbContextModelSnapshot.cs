@@ -153,6 +153,77 @@ namespace ERP.Modules.Accounting.Migrations
                     b.ToTable("acc_accounts", (string)null);
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountBalanceSnapshot", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("FiscalPeriodId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fiscal_period_id");
+
+                    b.Property<Guid>("FiscalYearId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fiscal_year_id");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at_utc");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<decimal>("PeriodCredit")
+                        .HasPrecision(28, 4)
+                        .HasColumnType("numeric(28,4)")
+                        .HasColumnName("period_credit");
+
+                    b.Property<decimal>("PeriodDebit")
+                        .HasPrecision(28, 4)
+                        .HasColumnType("numeric(28,4)")
+                        .HasColumnName("period_debit");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_account_balance_snapshots");
+
+                    b.HasIndex("TenantId", "CompanyId", "FiscalPeriodId", "AccountId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_acc_account_balance_snapshots_tenant_id_company_id_fiscal_p");
+
+                    b.HasIndex("TenantId", "CompanyId", "FiscalYearId", "AccountId")
+                        .HasDatabaseName("ix_acc_account_balance_snapshots_tenant_id_company_id_fiscal_y");
+
+                    b.ToTable("acc_account_balance_snapshots", (string)null);
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountGroup", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1108,6 +1179,10 @@ namespace ERP.Modules.Accounting.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("account_id");
 
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
                     b.Property<Guid>("CompanyId")
                         .HasColumnType("uuid")
                         .HasColumnName("company_id");
@@ -1233,9 +1308,15 @@ namespace ERP.Modules.Accounting.Migrations
                     b.HasIndex("TenantId", "CompanyId", "AccountId", "EntryDate")
                         .HasDatabaseName("ix_acc_gl_entries_tenant_id_company_id_account_id_entry_date");
 
+                    b.HasIndex("TenantId", "CompanyId", "BranchId", "EntryDate")
+                        .HasDatabaseName("ix_acc_gl_entries_tenant_id_company_id_branch_id_entry_date");
+
                     b.HasIndex("TenantId", "CompanyId", "DocumentId", "DocumentLineId")
                         .IsUnique()
                         .HasDatabaseName("ix_acc_gl_entries_tenant_id_company_id_document_id_document_li");
+
+                    b.HasIndex("TenantId", "CompanyId", "EntryDate", "DocumentNumber")
+                        .HasDatabaseName("ix_acc_gl_entries_tenant_id_company_id_entry_date_document_num");
 
                     b.HasIndex("TenantId", "CompanyId", "FiscalYearId", "FiscalPeriodId")
                         .HasDatabaseName("ix_acc_gl_entries_tenant_id_company_id_fiscal_year_id_fiscal_p");

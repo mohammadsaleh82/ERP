@@ -36,6 +36,10 @@ public static class DependencyInjection
         services.AddScoped<IVoucherNumberingService, VoucherNumberingService>();
         services.AddScoped<IDocumentService, DocumentService>();
         services.AddScoped<IVoucherPostingEngine, VoucherPostingEngine>();
+        services.AddScoped<IBalanceEngine, BalanceEngine>();
+        services.AddScoped<IBalanceSnapshotService, BalanceSnapshotService>();
+        services.AddScoped<ILedgerQueryService, LedgerQueryService>();
+        services.AddScoped<IGlConsistencyService, GlConsistencyService>();
         services.AddScoped<Contracts.Interfaces.IAccountingModuleApi, Application.Services.AccountingModuleApi>();
         services.AddScoped<CreateDocumentRequestValidator>();
         services.AddScoped<UpdateDocumentRequestValidator>();

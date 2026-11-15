@@ -26,6 +26,7 @@ public class AccountingDbContext : BaseDbContext
     public DbSet<AccountingDocumentLine> DocumentLines => Set<AccountingDocumentLine>();
     public DbSet<GeneralLedgerEntry> GeneralLedgerEntries => Set<GeneralLedgerEntry>();
     public DbSet<DocumentAuditLog> DocumentAuditLogs => Set<DocumentAuditLog>();
+    public DbSet<AccountBalanceSnapshot> AccountBalanceSnapshots => Set<AccountBalanceSnapshot>();
 
     public AccountingDbContext(
         DbContextOptions<AccountingDbContext> options,
@@ -41,5 +42,43 @@ public class AccountingDbContext : BaseDbContext
         base.OnModelCreating(builder);
 
         builder.ApplyConfigurationsFromAssembly(typeof(AccountingDbContext).Assembly);
+    }
+
+    /// <summary>
+    /// گارد تغییرناپذیری Posted Ledger: سطرهای دفتر کل پس از ثبت قطعی هیچ‌گاه اجازه
+    /// UPDATE یا DELETE ندارند؛ اصلاح تنها با سند معکوس (ایجاد سطرهای جدید) معتبر است.
+    /// این گارد در همان لایه Persistence جلوی هر مسیر نوشتن ناخواسته را می‌گیرد.
+    /// </summary>
+    public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        EnsureLedgerEntriesImmutable();
+        return base.SaveChangesAsync(cancellationToken);
+    }
+
+    public override Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default)
+    {
+        EnsureLedgerEntriesImmutable();
+        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    public override int SaveChanges()
+    {
+        EnsureLedgerEntriesImmutable();
+        return base.SaveChanges();
+    }
+
+    private void EnsureLedgerEntriesImmutable()
+    {
+        var tampered = ChangeTracker.Entries<GeneralLedgerEntry>()
+            .Where(e => e.State is EntityState.Modified or EntityState.Deleted)
+            .ToList();
+
+        if (tampered.Count > 0)
+        {
+            throw new ERP.Modules.Accounting.Domain.Exceptions.AccountingDomainException(
+                "Accounting.PostedLedgerImmutable",
+                $"سطرهای دفتر کل تغییرناپذیرند؛ تلاش برای ویرایش یا حذف {tampered.Count} سطر دفتر کل مسدود شد. " +
+                "اصلاح گردش مالی تنها از طریق سند معکوس (Storno) به‌صورت سطرهای جدید مجاز است.");
+        }
     }
 }

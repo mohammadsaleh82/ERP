@@ -267,6 +267,8 @@ public class GeneralLedgerEntryConfiguration : IEntityTypeConfiguration<GeneralL
         builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.AccountId, e.EntryDate });
         builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.DocumentId });
         builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.SourceModule, e.SourceDocumentId });
+        builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.BranchId, e.EntryDate }); // فیلتر شعبه در گزارش‌های دفتر
+        builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.EntryDate, e.DocumentNumber }); // ترتیب دفتر روزنامه
     }
 }
 
@@ -284,5 +286,22 @@ public class DocumentAuditLogConfiguration : IEntityTypeConfiguration<DocumentAu
         // رکوردهای ممیزی بدون وابستگی FK به سند نگهداری می‌شوند تا پس از حذف پیش‌نویس نیز باقی بمانند
         builder.HasIndex(l => new { l.TenantId, l.CompanyId, l.DocumentId, l.PerformedAtUtc });
         builder.HasIndex(l => new { l.TenantId, l.CompanyId, l.Action });
+    }
+}
+
+public class AccountBalanceSnapshotConfiguration : IEntityTypeConfiguration<AccountBalanceSnapshot>
+{
+    public void Configure(EntityTypeBuilder<AccountBalanceSnapshot> builder)
+    {
+        builder.ToTable("acc_account_balance_snapshots");
+        builder.HasKey(s => s.Id);
+
+        builder.Property(s => s.PeriodDebit).HasPrecision(28, 4);
+        builder.Property(s => s.PeriodCredit).HasPrecision(28, 4);
+        builder.Property(s => s.Version).IsConcurrencyToken();
+
+        // یک ردیف به ازای هر (شرکت، دوره مالی، حساب)
+        builder.HasIndex(s => new { s.TenantId, s.CompanyId, s.FiscalPeriodId, s.AccountId }).IsUnique();
+        builder.HasIndex(s => new { s.TenantId, s.CompanyId, s.FiscalYearId, s.AccountId });
     }
 }
