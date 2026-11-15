@@ -204,7 +204,7 @@ public class AccountingDocumentConfiguration : IEntityTypeConfiguration<Accounti
 
         builder.HasIndex(d => new { d.TenantId, d.CompanyId, d.FiscalYearId, d.DocumentNumber }).IsUnique();
         builder.HasIndex(d => new { d.TenantId, d.CompanyId, d.DocumentDate, d.Status });
-        builder.HasIndex(d => new { d.TenantId, d.CompanyId, d.IdempotencyKey });
+        builder.HasIndex(d => new { d.TenantId, d.CompanyId, d.IdempotencyKey }).IsUnique(); // کلید ایدمپوتنسی یکتا در سطح شرکت (مقادیر NULL متعدد مجاز است)
         builder.HasIndex(d => new { d.TenantId, d.CompanyId, d.SourceModule, d.SourceDocumentId });
 
         builder.HasMany(d => d.Lines)
@@ -239,5 +239,50 @@ public class AccountingDocumentLineConfiguration : IEntityTypeConfiguration<Acco
             .WithMany()
             .HasForeignKey(l => l.AccountId)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class GeneralLedgerEntryConfiguration : IEntityTypeConfiguration<GeneralLedgerEntry>
+{
+    public void Configure(EntityTypeBuilder<GeneralLedgerEntry> builder)
+    {
+        builder.ToTable("acc_gl_entries");
+        builder.HasKey(e => e.Id);
+
+        builder.Property(e => e.Description).HasMaxLength(500).IsRequired();
+        builder.Property(e => e.CurrencyCode).HasMaxLength(3).IsRequired();
+        builder.Property(e => e.ForeignCurrencyCode).HasMaxLength(3);
+        builder.Property(e => e.SourceModule).HasMaxLength(50);
+        builder.Property(e => e.PostedBy).HasMaxLength(100).IsRequired();
+
+        builder.Property(e => e.DebitAmount).HasPrecision(28, 4);
+        builder.Property(e => e.CreditAmount).HasPrecision(28, 4);
+        builder.Property(e => e.ForeignCurrencyAmount).HasPrecision(28, 4);
+        builder.Property(e => e.ExchangeRate).HasPrecision(18, 6);
+
+        // گارد پایگاه‌داده‌ای در برابر ثبت دوباره (Double Posting): هر ردیف سند تنها یک سطر دفتر کل می‌تواند داشته باشد
+        builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.DocumentId, e.DocumentLineId }).IsUnique();
+
+        builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.FiscalYearId, e.FiscalPeriodId });
+        builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.AccountId, e.EntryDate });
+        builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.DocumentId });
+        builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.SourceModule, e.SourceDocumentId });
+    }
+}
+
+public class DocumentAuditLogConfiguration : IEntityTypeConfiguration<DocumentAuditLog>
+{
+    public void Configure(EntityTypeBuilder<DocumentAuditLog> builder)
+    {
+        builder.ToTable("acc_document_audit_logs");
+        builder.HasKey(l => l.Id);
+
+        builder.Property(l => l.Action).HasMaxLength(50).IsRequired();
+        builder.Property(l => l.Details).HasMaxLength(1000);
+        builder.Property(l => l.PerformedBy).HasMaxLength(100).IsRequired();
+
+        // رکوردهای ممیزی بدون وابستگی FK به سند نگهداری می‌شوند تا پس از حذف پیش‌نویس نیز باقی بمانند
+        builder.HasIndex(l => new { l.TenantId, l.CompanyId, l.DocumentId, l.PerformedAtUtc });
+        builder.HasIndex(l => new { l.TenantId, l.CompanyId, l.Action });
     }
 }

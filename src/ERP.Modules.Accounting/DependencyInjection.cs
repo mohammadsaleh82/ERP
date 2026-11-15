@@ -1,4 +1,5 @@
 ﻿using ERP.Modules.Accounting.Application.Services;
+using ERP.Modules.Accounting.Application.Validators;
 using ERP.Modules.Accounting.Domain.Services;
 using ERP.Modules.Accounting.Infrastructure.Persistence;
 using FluentValidation;
@@ -33,6 +34,11 @@ public static class DependencyInjection
         services.AddScoped<IFiscalYearService, FiscalYearService>();
         services.AddScoped<IAccountingSettingsService, AccountingSettingsService>();
         services.AddScoped<IVoucherNumberingService, VoucherNumberingService>();
+        services.AddScoped<IDocumentService, DocumentService>();
+        services.AddScoped<IVoucherPostingEngine, VoucherPostingEngine>();
+        services.AddScoped<Contracts.Interfaces.IAccountingModuleApi, Application.Services.AccountingModuleApi>();
+        services.AddScoped<CreateDocumentRequestValidator>();
+        services.AddScoped<UpdateDocumentRequestValidator>();
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
         return services;

@@ -17,11 +17,12 @@ public static class DebitCreditExtensions
 
 public enum DocumentStatus
 {
-    Draft = 1,       // یادداشت / پیش‌نویس (قابل ویرایش و حذف)
-    Reviewed = 2,    // بررسی شده
-    Approved = 3,    // تایید شده مالی
-    Posted = 4,      // ثبت قطعی / دائم (غیرقابل ویرایش و حذف فیزیکی)
-    Reversed = 5     // باطل‌شده با سند معکوس
+    Draft = 1,            // پیش‌نویس (قابل ویرایش و حذف فیزیکی)
+    PendingApproval = 2,  // در انتظار تأیید (ارسال‌شده به جریان تأیید)
+    Reviewed = 3,         // بررسی شده (مرحله میانی سیاست تأیید سه‌مرحله‌ای)
+    Approved = 4,         // تایید شده و آماده ثبت قطعی
+    Posted = 5,           // ثبت قطعی / دائم (غیرقابل ویرایش؛ اصلاح فقط با سند معکوس یا تعدیل)
+    Reversed = 6          // باطل‌شده با سند معکوس
 }
 
 public enum DocumentType
@@ -126,4 +127,30 @@ public enum DocumentApprovalPolicy
     DirectPostingAllowed = 1,      // ثبت مستقیم و بدون نیاز به تاییدیه چندمرحله‌ای
     TwoStepApprovalRequired = 2,   // پیش‌نویس -> تصویب و ثبت قطعی
     ThreeStepApprovalRequired = 3  // پیش‌نویس -> بررسی کارشناس -> تایید نهایی مدیر مالی
+}
+
+/// <summary>
+/// منشأ (Source) اسناد حسابداری. اسناد سیستمی باید همیشه منشأ مشخص و قابل ردیابی داشته باشند.
+/// قرارداد ارتباطی ماژول‌های دیگر با موتور سند از طریق این مقادیر برقرار می‌شود.
+/// </summary>
+public static class DocumentSourceModules
+{
+    public const string Manual = "Manual";             // سند دستی کاربر
+    public const string Accounting = "Accounting";     // اسناد داخلی حسابداری (معکوس / تعدیل)
+    public const string Sales = "Sales";               // فروش و بازرگانی
+    public const string Purchasing = "Purchasing";     // خرید و تدارکات
+    public const string Inventory = "Inventory";       // انبار و گردش موجودی
+    public const string Treasury = "Treasury";         // خزانه‌داری و نقدینگی
+    public const string Payroll = "Payroll";           // حقوق و دستمزد
+
+    public static readonly IReadOnlyList<string> All =
+    [
+        Manual, Accounting, Sales, Purchasing, Inventory, Treasury, Payroll
+    ];
+
+    public static bool IsKnown(string? sourceModule) =>
+        !string.IsNullOrWhiteSpace(sourceModule) && All.Contains(sourceModule.Trim(), StringComparer.OrdinalIgnoreCase);
+
+    public static string Normalize(string sourceModule) =>
+        All.First(s => s.Equals(sourceModule.Trim(), StringComparison.OrdinalIgnoreCase));
 }

@@ -3,6 +3,7 @@ using ERP.BuildingBlocks.Tenancy;
 using ERP.Modules.Accounting.Domain.Enums;
 using ERP.Modules.Accounting.Domain.Events;
 using ERP.Modules.Accounting.Domain.Exceptions;
+using ERP.Modules.Accounting.Domain.Services;
 using ERP.Modules.Accounting.Domain.ValueObjects;
 
 namespace ERP.Modules.Accounting.Domain.Entities;
@@ -39,11 +40,25 @@ public class AccountingDocument : AggregateRoot, ITenantScoped, ICompanyScoped, 
     public DateTimeOffset? LastModifiedAtUtc { get; set; }
     public string? LastModifiedBy { get; set; }
 
+    // Workflow stamps (چرخه عمر سند: Submit / Review / Approve / Reject / Post)
+    public DateTimeOffset? SubmittedAtUtc { get; set; }
+    public string? SubmittedBy { get; set; }
+    public DateTimeOffset? ReviewedAtUtc { get; set; }
+    public string? ReviewedBy { get; set; }
+    public DateTimeOffset? ApprovedAtUtc { get; set; }
+    public string? ApprovedBy { get; set; }
+    public DateTimeOffset? RejectedAtUtc { get; set; }
+    public string? RejectedBy { get; set; }
+    public string? RejectionReason { get; set; }
+    public DateTimeOffset? PostedAtUtc { get; set; }
+    public string? PostedBy { get; set; }
+
     public List<AccountingDocumentLine> Lines { get; set; } = [];
 
     public bool IsBalanced => TotalDebit == TotalCredit;
     public decimal ImbalanceAmount => Math.Abs(TotalDebit - TotalCredit);
     public bool IsImmutable => Status is DocumentStatus.Posted or DocumentStatus.Reversed;
+    public bool IsEditable => AccountingDocumentWorkflow.CanEditOrDelete(Status);
 
     public AccountingDocument()
     {
@@ -151,12 +166,113 @@ public class AccountingDocument : AggregateRoot, ITenantScoped, ICompanyScoped, 
         RecalculateTotals();
     }
 
-    public void Post()
+    /// <summary>
+    /// ویرایش مشخصات سرآیند سند پیش‌نویس (شرح و تاریخ).
+    /// </summary>
+    public void UpdateDraft(DateOnly documentDate, string description, string? referenceNumber = null)
     {
-        EnsureMutable();
+        EnsureEditable();
+
+        if (string.IsNullOrWhiteSpace(description))
+            throw new AccountingDomainException("Accounting.EmptyDescription", "شرح سند حسابداری الزامی است.");
+
+        DocumentDate = documentDate;
+        Description = description.Trim();
+        ReferenceNumber = referenceNumber?.Trim();
+    }
+
+    /// <summary>
+    /// جایگزینی کامل سطرهای سند پیش‌نویس (Update Draft).
+    /// </summary>
+    public void ReplaceDraftLines(IReadOnlyList<AccountingDocumentLine> newLines)
+    {
+        EnsureEditable();
+
+        Lines.Clear();
+        foreach (var line in newLines)
+        {
+            line.LineNumber = Lines.Count + 1;
+            line.DocumentId = Id;
+            Lines.Add(line);
+        }
+
+        RecalculateTotals();
+    }
+
+    /// <summary>
+    /// ارسال سند به جریان تأیید: Draft → PendingApproval.
+    /// </summary>
+    public void SubmitForApproval(string submittedBy)
+    {
+        if (string.IsNullOrWhiteSpace(submittedBy))
+            throw new AccountingDomainException("Accounting.EmptyActor", "کاربر انجام‌دهنده عملیات ارسال سند الزامی است.");
+
+        AccountingDocumentWorkflow.EnsureCanSubmit(Status);
+
+        if (Lines.Count == 0)
+            throw new AccountingDomainException("Accounting.InsufficientLines", "سند بدون ردیف معتبر قابل ارسال به جریان تأیید نیست.");
+
+        Status = DocumentStatus.PendingApproval;
+        SubmittedAtUtc = DateTimeOffset.UtcNow;
+        SubmittedBy = submittedBy.Trim();
+
+        AddDomainEvent(AccountingDocumentSubmittedEvent.Create(Id, TenantId, CompanyId, DocumentNumber));
+    }
+
+    /// <summary>
+    /// تأیید سند؛ در سیاست سه‌مرحله‌ای، تأیید نخست سند را «بررسی‌شده» و تأیید دوم «تأییدشده» می‌کند.
+    /// </summary>
+    public void Approve(DocumentApprovalPolicy policy, string approvedBy)
+    {
+        if (string.IsNullOrWhiteSpace(approvedBy))
+            throw new AccountingDomainException("Accounting.EmptyActor", "کاربر انجام‌دهنده عملیات تأیید سند الزامی است.");
+
+        AccountingDocumentWorkflow.EnsureCanApprove(Status, policy);
+
+        if (Status == DocumentStatus.PendingApproval && policy == DocumentApprovalPolicy.ThreeStepApprovalRequired)
+        {
+            Status = DocumentStatus.Reviewed;
+            ReviewedAtUtc = DateTimeOffset.UtcNow;
+            ReviewedBy = approvedBy.Trim();
+        }
+        else
+        {
+            Status = DocumentStatus.Approved;
+            ApprovedAtUtc = DateTimeOffset.UtcNow;
+            ApprovedBy = approvedBy.Trim();
+        }
+    }
+
+    /// <summary>
+    /// رد سند در جریان تأیید و بازگشت آن به پیش‌نویس با ثبت دلیل رد.
+    /// </summary>
+    public void Reject(string rejectedBy, string rejectionReason)
+    {
+        if (string.IsNullOrWhiteSpace(rejectedBy))
+            throw new AccountingDomainException("Accounting.EmptyActor", "کاربر انجام‌دهنده عملیات رد سند الزامی است.");
+        if (string.IsNullOrWhiteSpace(rejectionReason))
+            throw new AccountingDomainException("Accounting.EmptyRejectionReason", "دلیل رد سند الزامی است.");
+
+        AccountingDocumentWorkflow.EnsureCanReject(Status);
+
+        Status = DocumentStatus.Draft;
+        RejectedAtUtc = DateTimeOffset.UtcNow;
+        RejectedBy = rejectedBy.Trim();
+        RejectionReason = rejectionReason.Trim();
+    }
+
+    /// <summary>
+    /// ثبت قطعی سند با کنترل ماشین وضعیت بر اساس سیاست تأیید شرکت.
+    /// </summary>
+    public void Post(DocumentApprovalPolicy approvalPolicy)
+    {
+        AccountingDocumentWorkflow.EnsureCanPost(Status, approvalPolicy);
 
         if (Lines.Count < 2)
             throw new AccountingDomainException("Accounting.InsufficientLines", "سند حسابداری جهت ثبت قطعی باید حداقل شامل دو سطر (یک بدهکار و یک بستانکار) باشد.");
+
+        if (Lines.Any(l => l.DebitAmount <= 0m && l.CreditAmount <= 0m))
+            throw new AccountingDomainException("Accounting.ZeroAmountLine", "ردیف بدون مبلغ معتبر مجاز نیست؛ سند دارای ردیف صفر قابل قطعی‌سازی نیست.");
 
         if (!IsBalanced)
             throw new UnbalancedDocumentException(TotalDebit, TotalCredit);
@@ -175,14 +291,31 @@ public class AccountingDocument : AggregateRoot, ITenantScoped, ICompanyScoped, 
             TotalDebit));
     }
 
+    /// <summary>
+    /// ثبت اطلاعات ممیزی لحظه قطعی‌سازی (کاربر واقعی و زمان ثبت) — پس از اعتبارسنجی‌های موتور سند.
+    /// </summary>
+    public void MarkPosted(string postedBy, DateTimeOffset postedAtUtc)
+    {
+        if (Status != DocumentStatus.Posted)
+            throw new AccountingDomainException("Accounting.NotPostedState", "ثبت اطلاعات قطعی‌سازی تنها برای سند در وضعیت Posted مجاز است.");
+
+        PostedBy = postedBy?.Trim();
+        PostedAtUtc = postedAtUtc;
+    }
+
+    public void Post()
+    {
+        Post(DocumentApprovalPolicy.DirectPostingAllowed);
+    }
+
+
     public AccountingDocument CreateReversal(
         long newDocumentNumber,
         DateOnly reversalDate,
         string reversalDescription,
         Guid fiscalPeriodId)
     {
-        if (Status != DocumentStatus.Posted)
-            throw new AccountingDomainException("Accounting.CannotReverseUnpostedDocument", "تنها اسناد قطعی (Posted) امکان معکوس‌سازی (Storno) دارند.");
+        AccountingDocumentWorkflow.EnsureCanReverse(Status);
 
         var reversalDoc = new AccountingDocument(
             TenantId,
@@ -198,6 +331,8 @@ public class AccountingDocument : AggregateRoot, ITenantScoped, ICompanyScoped, 
             sourceModule: "Accounting",
             sourceDocumentId: Id)
         {
+            // شناسه باید پیش از ارجاع‌دهی متقابل صریحاً تولید شود (تولید EF فقط در لحظه Add انجام می‌شود)
+            Id = Guid.NewGuid(),
             ReversedDocumentId = Id
         };
 
@@ -217,6 +352,9 @@ public class AccountingDocument : AggregateRoot, ITenantScoped, ICompanyScoped, 
                 originalLine.ExchangeRate);
         }
 
+        // سند معکوس بلافاصله پس از ایجاد، قطعی می‌شود (تراز آینه‌ای تضمین‌شده است)
+        reversalDoc.Post(DocumentApprovalPolicy.DirectPostingAllowed);
+
         Status = DocumentStatus.Reversed;
         ReversedDocumentId = reversalDoc.Id;
 
@@ -231,10 +369,19 @@ public class AccountingDocument : AggregateRoot, ITenantScoped, ICompanyScoped, 
         return reversalDoc;
     }
 
-    private void EnsureMutable()
+    private void EnsureMutable() => EnsureEditable();
+
+    private void EnsureEditable()
     {
+        if (IsEditable)
+            return;
+
         if (IsImmutable)
             throw new ImmutableDocumentException(Id, Status.ToString());
+
+        // اسناد در جریان تأیید (PendingApproval / Reviewed) و تأییدشده نیز قابل ویرایش و حذف نیستند
+        throw new AccountingDomainException("Accounting.DocumentNotEditable",
+            $"سند در وضعیت '{Status}' قابل ویرایش یا حذف نیست؛ تنها اسناد پیش‌نویس (Draft) قابل اصلاح هستند.");
     }
 
     private void RecalculateTotals()
@@ -306,6 +453,19 @@ public class AccountingDocumentLine : Entity, ITenantScoped, ICompanyScoped, IAu
         ForeignCurrencyCode = foreignCurrencyCode;
         ForeignCurrencyAmount = foreignCurrencyAmount;
         ExchangeRate = exchangeRate;
+
+        // ردیف بدون مبلغ معتبر مجاز نیست
+        if (amount <= 0m)
+            throw new AccountingDomainException("Accounting.InvalidLineAmount", "مبلغ ردیف سند باید عددی مثبت و بزرگتر از صفر باشد.");
+
+        if (exchangeRate <= 0m)
+            throw new AccountingDomainException("Accounting.InvalidExchangeRate", "نرخ تسعیر ردیف سند باید مثبت باشد.");
+
+        if (foreignCurrencyAmount.HasValue && foreignCurrencyAmount.Value <= 0m)
+            throw new AccountingDomainException("Accounting.InvalidForeignAmount", "مبلغ ارزی ردیف سند باید مثبت باشد.");
+
+        if (foreignCurrencyAmount.HasValue && string.IsNullOrWhiteSpace(foreignCurrencyCode))
+            throw new AccountingDomainException("Accounting.MissingForeignCurrency", "ثبت مبلغ ارزی بدون کد ارز مجاز نیست.");
 
         if (debitCredit == DebitCredit.Debit)
         {

@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="coverlet.collector">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
@@ -26,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\ERP.Api\ERP.Api.csproj" />
     <ProjectReference Include="..\..\src\ERP.BuildingBlocks\ERP.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Accounting\ERP.Modules.Accounting.csproj" />
     <ProjectReference Include="..\..\src\ERP.Modules.Identity\ERP.Modules.Identity.csproj" />
     <ProjectReference Include="..\..\src\ERP.Modules.Tenancy\ERP.Modules.Tenancy.csproj" />
   </ItemGroup>

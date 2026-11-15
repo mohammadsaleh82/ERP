@@ -24,6 +24,8 @@ public class AccountingDbContext : BaseDbContext
     public DbSet<AccountTemplateItem> AccountTemplateItems => Set<AccountTemplateItem>();
     public DbSet<AccountingDocument> Documents => Set<AccountingDocument>();
     public DbSet<AccountingDocumentLine> DocumentLines => Set<AccountingDocumentLine>();
+    public DbSet<GeneralLedgerEntry> GeneralLedgerEntries => Set<GeneralLedgerEntry>();
+    public DbSet<DocumentAuditLog> DocumentAuditLogs => Set<DocumentAuditLog>();
 
     public AccountingDbContext(
         DbContextOptions<AccountingDbContext> options,

@@ -63,3 +63,31 @@ dotnet test tests/ERP.SecurityTests/
 # اجرای اختصاصی آزمون‌های یکپارچگی
 dotnet test tests/ERP.IntegrationTests/
 ```
+
+---
+
+## ۴. اجرای تست‌های هم‌زمانی موتور سند روی PostgreSQL واقعی (PROMPT 04)
+
+تست‌های هم‌زمانی Posting (`VoucherConcurrencyPostgresTests`) برخلاف بقیه تست‌ها روی **PostgreSQL واقعی** اجرا می‌شوند و از SQLite استفاده نمی‌کنند:
+
+```bash
+# روش ۱: استفاده از PostgreSQL کانتینری پروژه
+docker compose up -d postgres
+
+# روش ۲: رشته اتصال سفارشی از طریق متغیر محیطی
+export ERP_TEST_POSTGRES="Host=localhost;Port=5432;Username=erp_user;Password=***;Database=postgres"
+
+# اجرای فقط تست‌های هم‌زمانی
+dotnet test tests/ERP.IntegrationTests/ --filter "FullyQualifiedName~VoucherConcurrencyPostgresTests"
+```
+
+- هر تست یک پایگاه‌داده ایزوله با نام یکتا می‌سازد و در پایان پاک می‌کند.
+- پیش‌فرض (در نبود متغیر محیطی): `Host=localhost;Port=5433;Username=erp_user;Password=erp_test_password`.
+- در نبود سرور PostgreSQL، این تست‌ها با پیام توضیحی در خروجی رد می‌شوند تا بقیه سوئیت سبز بماند.
+
+پوشش سناریوهای حیاتی موتور سند (۱۵ سناریوی PROMPT 04) در این فایل‌ها است:
+- `tests/ERP.UnitTests/DocumentWorkflowStateTests.cs` — ماشین وضعیت و سیاست‌های تأیید
+- `tests/ERP.UnitTests/VoucherDoubleEntryRulesTests.cs` — قوانین دوبل در سطح دامنه
+- `tests/ERP.IntegrationTests/VoucherPostingIntegrationTests.cs` — سناریوهای ۱ تا ۹ و ۱۱ تا ۱۵ روی پایگاه‌داده
+- `tests/ERP.IntegrationTests/VoucherConcurrencyPostgresTests.cs` — سناریو ۱۰ (هم‌زمانی) روی PostgreSQL واقعی
+- `tests/ERP.SecurityTests/VoucherSecurityTests.cs` — گاردهای امنیتی سند و مجوزها
