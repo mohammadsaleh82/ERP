@@ -1,0 +1,92 @@
+services:
+  # ----------------------------------------------------------------------------
+  # PostgreSQL Database (Version 17 Alpine)
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:17-alpine
+    container_name: erp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-erp_db}
+      POSTGRES_USER: ${POSTGRES_USER:-erp_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-erp_secure_password_change_in_prod}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-erp_user} -d ${POSTGRES_DB:-erp_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - erp-internal
+    # Note: In production, do not map port 5432 to host. For local dev only:
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  # ----------------------------------------------------------------------------
+  # Backend API (.NET 10 Modular Monolith)
+  # ----------------------------------------------------------------------------
+  erp-api:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend
+    container_name: erp-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${APP_ENV:-Production}
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-erp_db};Username=${POSTGRES_USER:-erp_user};Password=${POSTGRES_PASSWORD:-erp_secure_password_change_in_prod}"
+      Jwt__Issuer: ${JWT_ISSUER:-ERP.Api}
+      Jwt__Audience: ${JWT_AUDIENCE:-ERP.Client}
+      Jwt__SecretKey: ${JWT_SECRET:-ERP_Production_Secret_Key_At_Least_32_Bytes_Long_Required!}
+      Jwt__ExpiryMinutes: ${JWT_EXPIRY_MINUTES:-15}
+      Jwt__RefreshTokenExpiryDays: ${JWT_REFRESH_EXPIRY_DAYS:-7}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - erp-internal
+    expose:
+      - "5000"
+
+  # ----------------------------------------------------------------------------
+  # Frontend Web Client (React 19 + Vite + Nginx)
+  # ----------------------------------------------------------------------------
+  erp-frontend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.frontend
+    container_name: erp-frontend
+    restart: unless-stopped
+    depends_on:
+      - erp-api
+    networks:
+      - erp-internal
+    expose:
+      - "80"
+
+  # ----------------------------------------------------------------------------
+  # Nginx Reverse Proxy / Gateway
+  # ----------------------------------------------------------------------------
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: erp-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+    depends_on:
+      - erp-api
+      - erp-frontend
+    networks:
+      - erp-internal
+
+networks:
+  erp-internal:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

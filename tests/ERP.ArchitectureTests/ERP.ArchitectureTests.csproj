@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>ERP.ArchitectureTests</RootNamespace>
+    <AssemblyName>ERP.ArchitectureTests</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" />
+    <PackageReference Include="xunit.runner.visualstudio">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="NetArchTest.Rules" />
+    <PackageReference Include="coverlet.collector">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ERP.BuildingBlocks\ERP.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Api\ERP.Api.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Identity\ERP.Modules.Identity.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Tenancy\ERP.Modules.Tenancy.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Accounting\ERP.Modules.Accounting.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Treasury\ERP.Modules.Treasury.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Inventory\ERP.Modules.Inventory.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Purchasing\ERP.Modules.Purchasing.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Sales\ERP.Modules.Sales.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Parties\ERP.Modules.Parties.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Payroll\ERP.Modules.Payroll.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Reporting\ERP.Modules.Reporting.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Subscriptions\ERP.Modules.Subscriptions.csproj" />
+    <ProjectReference Include="..\..\src\ERP.Modules.Audit\ERP.Modules.Audit.csproj" />
+  </ItemGroup>
+
+</Project>

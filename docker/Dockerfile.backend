@@ -1,0 +1,54 @@
+# ------------------------------------------------------------------------------
+# Build Stage (.NET 10 SDK)
+# ------------------------------------------------------------------------------
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Copy CPM configuration and build props first for efficient layer caching
+COPY ["Directory.Build.props", "./"]
+COPY ["Directory.Packages.props", "./"]
+COPY ["global.json", "./"]
+
+# Copy project files for restore
+COPY ["src/ERP.Api/ERP.Api.csproj", "src/ERP.Api/"]
+COPY ["src/ERP.BuildingBlocks/ERP.BuildingBlocks.csproj", "src/ERP.BuildingBlocks/"]
+COPY ["src/ERP.Modules.Identity/ERP.Modules.Identity.csproj", "src/ERP.Modules.Identity/"]
+COPY ["src/ERP.Modules.Tenancy/ERP.Modules.Tenancy.csproj", "src/ERP.Modules.Tenancy/"]
+COPY ["src/ERP.Modules.Accounting/ERP.Modules.Accounting.csproj", "src/ERP.Modules.Accounting/"]
+COPY ["src/ERP.Modules.Treasury/ERP.Modules.Treasury.csproj", "src/ERP.Modules.Treasury/"]
+COPY ["src/ERP.Modules.Inventory/ERP.Modules.Inventory.csproj", "src/ERP.Modules.Inventory/"]
+COPY ["src/ERP.Modules.Purchasing/ERP.Modules.Purchasing.csproj", "src/ERP.Modules.Purchasing/"]
+COPY ["src/ERP.Modules.Sales/ERP.Modules.Sales.csproj", "src/ERP.Modules.Sales/"]
+COPY ["src/ERP.Modules.Parties/ERP.Modules.Parties.csproj", "src/ERP.Modules.Parties/"]
+COPY ["src/ERP.Modules.Payroll/ERP.Modules.Payroll.csproj", "src/ERP.Modules.Payroll/"]
+COPY ["src/ERP.Modules.Reporting/ERP.Modules.Reporting.csproj", "src/ERP.Modules.Reporting/"]
+COPY ["src/ERP.Modules.Subscriptions/ERP.Modules.Subscriptions.csproj", "src/ERP.Modules.Subscriptions/"]
+COPY ["src/ERP.Modules.Audit/ERP.Modules.Audit.csproj", "src/ERP.Modules.Audit/"]
+
+# Restore dependencies
+RUN dotnet restore "src/ERP.Api/ERP.Api.csproj"
+
+# Copy full source and publish
+COPY ["src/", "src/"]
+WORKDIR "/src/src/ERP.Api"
+RUN dotnet publish "ERP.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
+
+# ------------------------------------------------------------------------------
+# Runtime Stage (ASP.NET Core 10 - Alpine / Chiseled non-root)
+# ------------------------------------------------------------------------------
+FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+WORKDIR /app
+
+# Run as non-root user
+USER $APP_UID
+
+EXPOSE 5000
+ENV ASPNETCORE_URLS=http://+:5000
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+COPY --from=build --chown=$APP_UID:$APP_UID /app/publish .
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:5000/health || exit 1
+
+ENTRYPOINT ["dotnet", "ERP.Api.dll"]
