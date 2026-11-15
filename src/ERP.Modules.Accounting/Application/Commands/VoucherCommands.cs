@@ -13,7 +13,13 @@ public sealed record VoucherLineCommand(
     Guid? DetailAccountId = null,
     string? ForeignCurrencyCode = null,
     decimal? ForeignAmount = null,
-    decimal ExchangeRate = 1.0m);
+    decimal ExchangeRate = 1.0m,
+    IReadOnlyList<DimensionAssignmentCommand>? Dimensions = null);
+
+/// <summary>اختصاص بعد مالی به ردیف سند (تفصیلی شناور، مرکز هزینه، پروژه، ...).</summary>
+public sealed record DimensionAssignmentCommand(
+    Domain.Enums.FinancialDimensionType DimensionType,
+    Guid DimensionId);
 
 public sealed record CreateVoucherDraftCommand(
     Guid TenantId,

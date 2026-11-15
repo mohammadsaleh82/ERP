@@ -27,6 +27,11 @@ public class AccountingDbContext : BaseDbContext
     public DbSet<GeneralLedgerEntry> GeneralLedgerEntries => Set<GeneralLedgerEntry>();
     public DbSet<DocumentAuditLog> DocumentAuditLogs => Set<DocumentAuditLog>();
     public DbSet<AccountBalanceSnapshot> AccountBalanceSnapshots => Set<AccountBalanceSnapshot>();
+    public DbSet<FinancialDimension> FinancialDimensions => Set<FinancialDimension>();
+    public DbSet<AccountDimensionPolicy> AccountDimensionPolicies => Set<AccountDimensionPolicy>();
+    public DbSet<DimensionCombinationRule> DimensionCombinationRules => Set<DimensionCombinationRule>();
+    public DbSet<DocumentLineDimension> DocumentLineDimensions => Set<DocumentLineDimension>();
+    public DbSet<GeneralLedgerEntryDimension> GeneralLedgerEntryDimensions => Set<GeneralLedgerEntryDimension>();
 
     public AccountingDbContext(
         DbContextOptions<AccountingDbContext> options,

@@ -34,17 +34,20 @@ public class VoucherPostingEngine : IVoucherPostingEngine
     private readonly AccountingDbContext _db;
     private readonly IVoucherNumberingService _numberingService;
     private readonly IBalanceSnapshotService _balanceSnapshotService;
+    private readonly IDimensionValidationService _dimensionValidation;
     private readonly IClock _clock;
 
     public VoucherPostingEngine(
         AccountingDbContext db,
         IVoucherNumberingService numberingService,
         IBalanceSnapshotService balanceSnapshotService,
+        IDimensionValidationService dimensionValidation,
         IClock clock)
     {
         _db = db;
         _numberingService = numberingService;
         _balanceSnapshotService = balanceSnapshotService;
+        _dimensionValidation = dimensionValidation;
         _clock = clock;
     }
 
@@ -110,6 +113,10 @@ public class VoucherPostingEngine : IVoucherPostingEngine
             // ۷. اعتبارسنجی نهایی ردیف‌ها (عدم وجود بدهکار و بستانکار هم‌زمان در یک ردیف)
             ValidateLines(doc);
 
+            // ۷-الف. اعتبارسنجی مجدد قواعد ابعاد مالی در لحظه قطعی‌سازی (دفاع در عمق؛
+            // سیاست‌های حساب و ترکیب‌های ممنوع ممکن است پس از ایجاد پیش‌نویس تغییر کرده باشند)
+            await ValidateDocumentDimensionsAsync(doc, cancellationToken);
+
             // ۸. کنترل تراز بر اساس ارز پایه (اختلاف هرچند کوچک ممنوع)
             if (!doc.IsBalanced)
                 throw new UnbalancedDocumentException(doc.TotalDebit, doc.TotalCredit);
@@ -118,11 +125,19 @@ public class VoucherPostingEngine : IVoucherPostingEngine
             doc.Post(policy);
             doc.MarkPosted(command.PerformedBy, nowUtc);
 
-            // ۱۰. ایجاد سطرهای دفتر کل با ارجاع کامل به منبع (سند + ردیف)
+            // ۱۰. ایجاد سطرهای دفتر کل با ارجاع کامل به منبع (سند + ردیف) و انعکاس ابعاد مالی
             foreach (var line in doc.Lines.OrderBy(l => l.LineNumber))
             {
-                _db.GeneralLedgerEntries.Add(GeneralLedgerEntry.FromDocumentLine(
-                    doc, line, fiscalPeriod.Id, command.PerformedBy, nowUtc));
+                var glEntry = GeneralLedgerEntry.FromDocumentLine(
+                    doc, line, fiscalPeriod.Id, command.PerformedBy, nowUtc);
+                _db.GeneralLedgerEntries.Add(glEntry);
+
+                foreach (var assignment in line.NormalizeDimensionAssignments())
+                {
+                    _db.GeneralLedgerEntryDimensions.Add(new GeneralLedgerEntryDimension(
+                        doc.TenantId, doc.CompanyId, glEntry.Id, doc.Id, line.Id,
+                        assignment.Type, assignment.DimensionId));
+                }
             }
 
             // ۱۱. ثبت رکورد ممیزی چرخه عمر
@@ -262,11 +277,19 @@ public class VoucherPostingEngine : IVoucherPostingEngine
 
             _db.Documents.Add(reversal);
 
-            // ۶. سطرهای دفتر کل سند معکوس
+            // ۶. سطرهای دفتر کل سند معکوس با انعکاس کامل ابعاد مالی
             foreach (var line in reversal.Lines.OrderBy(l => l.LineNumber))
             {
-                _db.GeneralLedgerEntries.Add(GeneralLedgerEntry.FromDocumentLine(
-                    reversal, line, fiscalPeriod.Id, command.PerformedBy, nowUtc, isReversal: true));
+                var glEntry = GeneralLedgerEntry.FromDocumentLine(
+                    reversal, line, fiscalPeriod.Id, command.PerformedBy, nowUtc, isReversal: true);
+                _db.GeneralLedgerEntries.Add(glEntry);
+
+                foreach (var assignment in line.NormalizeDimensionAssignments())
+                {
+                    _db.GeneralLedgerEntryDimensions.Add(new GeneralLedgerEntryDimension(
+                        reversal.TenantId, reversal.CompanyId, glEntry.Id, reversal.Id, line.Id,
+                        assignment.Type, assignment.DimensionId));
+                }
             }
 
             // ۷. رکوردهای ممیزی برای هر دو سند
@@ -429,6 +452,21 @@ public class VoucherPostingEngine : IVoucherPostingEngine
             doc.PostedAtUtc ?? doc.CreatedAtUtc,
             doc.PostedBy ?? "system",
             WasAlreadyPosted: true);
+
+    /// <summary>اعتبارسنجی قواعد ابعاد مالی تمام ردیف‌های سند در تراکنش قطعی‌سازی.</summary>
+    private async Task ValidateDocumentDimensionsAsync(AccountingDocument doc, CancellationToken cancellationToken)
+    {
+        var inputs = doc.Lines
+            .OrderBy(l => l.LineNumber)
+            .Select(l => new DocumentLineValidationInput(
+                l.AccountId,
+                l.LineNumber,
+                l.NormalizeDimensionAssignments()))
+            .ToList();
+
+        await _dimensionValidation.ValidateDocumentLinesAsync(
+            doc.TenantId, doc.CompanyId, inputs, cancellationToken);
+    }
 }
 
 /// <summary>نوع‌های استاندارد سریال شماره‌گذاری اسناد.</summary>

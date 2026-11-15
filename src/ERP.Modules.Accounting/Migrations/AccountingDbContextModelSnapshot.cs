@@ -224,6 +224,67 @@ namespace ERP.Modules.Accounting.Migrations
                     b.ToTable("acc_account_balance_snapshots", (string)null);
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountDimensionPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<int>("DimensionType")
+                        .HasColumnType("integer")
+                        .HasColumnName("dimension_type");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at_utc");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<int>("Mode")
+                        .HasColumnType("integer")
+                        .HasColumnName("mode");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_account_dimension_policies");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_acc_account_dimension_policies_account_id");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountId", "DimensionType")
+                        .IsUnique()
+                        .HasDatabaseName("ix_acc_account_dimension_policies_tenant_id_company_id_account");
+
+                    b.ToTable("acc_account_dimension_policies", (string)null);
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountGroup", b =>
                 {
                     b.Property<Guid>("Id")
@@ -921,6 +982,72 @@ namespace ERP.Modules.Accounting.Migrations
                     b.ToTable("acc_accounting_settings_history", (string)null);
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.DimensionCombinationRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("description");
+
+                    b.Property<Guid?>("FirstDimensionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("first_dimension_id");
+
+                    b.Property<int>("FirstDimensionType")
+                        .HasColumnType("integer")
+                        .HasColumnName("first_dimension_type");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at_utc");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<Guid?>("SecondDimensionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("second_dimension_id");
+
+                    b.Property<int>("SecondDimensionType")
+                        .HasColumnType("integer")
+                        .HasColumnName("second_dimension_type");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_dimension_combination_rules");
+
+                    b.HasIndex("TenantId", "CompanyId")
+                        .HasDatabaseName("ix_acc_dimension_combination_rules_tenant_id_company_id");
+
+                    b.ToTable("acc_dimension_combination_rules", (string)null);
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.DocumentAuditLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -995,6 +1122,131 @@ namespace ERP.Modules.Accounting.Migrations
                         .HasDatabaseName("ix_acc_document_audit_logs_tenant_id_company_id_document_id_pe");
 
                     b.ToTable("acc_document_audit_logs", (string)null);
+                });
+
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.DocumentLineDimension", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<Guid>("DimensionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("dimension_id");
+
+                    b.Property<int>("DimensionType")
+                        .HasColumnType("integer")
+                        .HasColumnName("dimension_type");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_id");
+
+                    b.Property<Guid>("DocumentLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_line_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_document_line_dimensions");
+
+                    b.HasIndex("DocumentLineId", "DimensionType")
+                        .IsUnique()
+                        .HasDatabaseName("ix_acc_document_line_dimensions_document_line_id_dimension_type");
+
+                    b.HasIndex("TenantId", "CompanyId", "DimensionType", "DimensionId")
+                        .HasDatabaseName("ix_acc_document_line_dimensions_tenant_id_company_id_dimension");
+
+                    b.ToTable("acc_document_line_dimensions", (string)null);
+                });
+
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FinancialDimension", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("code");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<int>("DimensionType")
+                        .HasColumnType("integer")
+                        .HasColumnName("dimension_type");
+
+                    b.Property<Guid?>("ExternalReferenceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("external_reference_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at_utc");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("OwnerModule")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("owner_module");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_financial_dimensions");
+
+                    b.HasIndex("TenantId", "CompanyId", "DimensionType", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_acc_financial_dimensions_tenant_id_company_id_dimension_typ");
+
+                    b.HasIndex("TenantId", "CompanyId", "DimensionType", "ExternalReferenceId")
+                        .HasDatabaseName("ix_acc_financial_dimensions_tenant_id_company_id_dimension_typ1");
+
+                    b.HasIndex("TenantId", "CompanyId", "DimensionType", "IsActive")
+                        .HasDatabaseName("ix_acc_financial_dimensions_tenant_id_company_id_dimension_typ2");
+
+                    b.ToTable("acc_financial_dimensions", (string)null);
                 });
 
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FiscalPeriod", b =>
@@ -1327,6 +1579,54 @@ namespace ERP.Modules.Accounting.Migrations
                     b.ToTable("acc_gl_entries", (string)null);
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.GeneralLedgerEntryDimension", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<Guid>("DimensionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("dimension_id");
+
+                    b.Property<int>("DimensionType")
+                        .HasColumnType("integer")
+                        .HasColumnName("dimension_type");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_id");
+
+                    b.Property<Guid>("DocumentLineId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_line_id");
+
+                    b.Property<Guid>("GeneralLedgerEntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("general_ledger_entry_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_gl_entry_dimensions");
+
+                    b.HasIndex("GeneralLedgerEntryId", "DimensionType")
+                        .IsUnique()
+                        .HasDatabaseName("ix_acc_gl_entry_dimensions_general_ledger_entry_id_dimension_t");
+
+                    b.HasIndex("TenantId", "CompanyId", "DimensionType", "DimensionId")
+                        .HasDatabaseName("ix_acc_gl_entry_dimensions_tenant_id_company_id_dimension_type");
+
+                    b.ToTable("acc_gl_entry_dimensions", (string)null);
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.VoucherSequence", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1413,6 +1713,16 @@ namespace ERP.Modules.Accounting.Migrations
                     b.Navigation("ParentAccount");
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountDimensionPolicy", b =>
+                {
+                    b.HasOne("ERP.Modules.Accounting.Domain.Entities.Account", null)
+                        .WithMany("DimensionPolicies")
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_acc_account_dimension_policies_acc_accounts_account_id");
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountTemplateItem", b =>
                 {
                     b.HasOne("ERP.Modules.Accounting.Domain.Entities.AccountTemplate", "Template")
@@ -1458,6 +1768,16 @@ namespace ERP.Modules.Accounting.Migrations
                     b.Navigation("Document");
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.DocumentLineDimension", b =>
+                {
+                    b.HasOne("ERP.Modules.Accounting.Domain.Entities.AccountingDocumentLine", null)
+                        .WithMany("Dimensions")
+                        .HasForeignKey("DocumentLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_acc_document_line_dimensions_acc_document_lines_document_li");
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FiscalPeriod", b =>
                 {
                     b.HasOne("ERP.Modules.Accounting.Domain.Entities.FiscalYear", "FiscalYear")
@@ -1470,8 +1790,20 @@ namespace ERP.Modules.Accounting.Migrations
                     b.Navigation("FiscalYear");
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.GeneralLedgerEntryDimension", b =>
+                {
+                    b.HasOne("ERP.Modules.Accounting.Domain.Entities.GeneralLedgerEntry", null)
+                        .WithMany()
+                        .HasForeignKey("GeneralLedgerEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_acc_gl_entry_dimensions_acc_gl_entries_general_ledger_entry");
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.Account", b =>
                 {
+                    b.Navigation("DimensionPolicies");
+
                     b.Navigation("SubAccounts");
                 });
 
@@ -1490,6 +1822,11 @@ namespace ERP.Modules.Accounting.Migrations
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountingDocument", b =>
                 {
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountingDocumentLine", b =>
+                {
+                    b.Navigation("Dimensions");
                 });
 
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FiscalYear", b =>

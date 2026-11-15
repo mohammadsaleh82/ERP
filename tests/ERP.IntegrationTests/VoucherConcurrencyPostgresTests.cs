@@ -148,8 +148,9 @@ public class VoucherConcurrencyPostgresTests : IAsyncLifetime
             Db = new AccountingDbContext(options, TenantContext, CurrentUser, Clock);
             var numbering = new VoucherNumberingService(Db);
             var snapshots = new BalanceSnapshotService(Db);
-            Docs = new DocumentService(Db, numbering, new CreateDocumentRequestValidator(), new UpdateDocumentRequestValidator());
-            Engine = new VoucherPostingEngine(Db, numbering, snapshots, Clock);
+            var dimensionValidation = new DimensionValidationApplicationService(Db);
+            Docs = new DocumentService(Db, numbering, new CreateDocumentRequestValidator(), new UpdateDocumentRequestValidator(), dimensionValidation);
+            Engine = new VoucherPostingEngine(Db, numbering, snapshots, dimensionValidation, Clock);
         }
     }
 

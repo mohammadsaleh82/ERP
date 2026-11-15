@@ -36,17 +36,29 @@ public class DocumentService : IDocumentService
     private readonly IVoucherNumberingService _numberingService;
     private readonly CreateDocumentRequestValidator _createValidator;
     private readonly UpdateDocumentRequestValidator _updateValidator;
+    private readonly IDimensionValidationService _dimensionValidation;
 
     public DocumentService(
         AccountingDbContext db,
         IVoucherNumberingService numberingService,
         CreateDocumentRequestValidator createValidator,
-        UpdateDocumentRequestValidator updateValidator)
+        UpdateDocumentRequestValidator updateValidator,
+        IDimensionValidationService dimensionValidation)
     {
         _db = db;
         _numberingService = numberingService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
+        _dimensionValidation = dimensionValidation;
+    }
+
+    /// <summary>اعمال ابعاد مالی فرمان روی ردیف پس از تخصیص شناسه سند (نرمال‌سازی ستون‌های قدیمی + ابعاد جدید).</summary>
+    private static void ApplyCommandDimensions(AccountingDocumentLine line, VoucherLineCommand command)
+    {
+        line.ReplaceDimensions(line.NormalizeDimensionAssignments()
+            .Union((command.Dimensions ?? [])
+                .Select(d => (d.DimensionType, d.DimensionId)))
+            .ToList());
     }
 
     // ------------------------------------------------------------------
@@ -123,6 +135,7 @@ public class DocumentService : IDocumentService
             command.SourceDocumentId,
             command.IdempotencyKey);
 
+        var dimensionValidationInputs = new List<DocumentLineValidationInput>();
         foreach (var line in command.Lines)
         {
             doc.AddLine(
@@ -136,9 +149,27 @@ public class DocumentService : IDocumentService
                 line.ForeignCurrencyCode,
                 line.ForeignAmount,
                 line.ExchangeRate);
+
+            var documentLine = doc.Lines.Last();
+            dimensionValidationInputs.Add(new DocumentLineValidationInput(line.AccountId, documentLine.LineNumber, []));
         }
 
         _db.Documents.Add(doc);
+
+        // ماده‌سازی اختصاص‌های بعد مالی پس از تخصیص شناسه سند توسط EF
+        for (var i = 0; i < command.Lines.Count; i++)
+        {
+            var documentLine = doc.Lines.OrderBy(l => l.LineNumber).ToList()[i];
+            ApplyCommandDimensions(documentLine, command.Lines[i]);
+            dimensionValidationInputs[i] = new DocumentLineValidationInput(
+                command.Lines[i].AccountId,
+                documentLine.LineNumber,
+                documentLine.NormalizeDimensionAssignments());
+        }
+
+        // اعتبارسنجی قواعد ابعاد مالی قبل از ذخیره پیش‌نویس
+        await _dimensionValidation.ValidateDocumentLinesAsync(
+            command.TenantId, command.CompanyId, dimensionValidationInputs, cancellationToken);
 
         _db.DocumentAuditLogs.Add(DocumentAuditLog.Create(
             command.TenantId, command.CompanyId, doc.Id,
@@ -172,10 +203,11 @@ public class DocumentService : IDocumentService
 
         doc.UpdateDraft(command.DocumentDate, command.Description, command.ReferenceNumber);
 
+        var dimensionValidationInputs = new List<DocumentLineValidationInput>();
         var newLines = new List<AccountingDocumentLine>();
         foreach (var line in command.Lines)
         {
-            newLines.Add(new AccountingDocumentLine(
+            var newLine = new AccountingDocumentLine(
                 doc.TenantId, doc.CompanyId, doc.Id,
                 line.AccountId,
                 newLines.Count + 1,
@@ -187,8 +219,17 @@ public class DocumentService : IDocumentService
                 line.DetailAccountId,
                 line.ForeignCurrencyCode,
                 line.ForeignAmount,
-                line.ExchangeRate));
+                line.ExchangeRate);
+
+            ApplyCommandDimensions(newLine, line);
+            dimensionValidationInputs.Add(new DocumentLineValidationInput(
+                line.AccountId, newLine.LineNumber, newLine.NormalizeDimensionAssignments()));
+            newLines.Add(newLine);
         }
+
+        // اعتبارسنجی قواعد ابعاد مالی قبل از ذخیره ویرایش
+        await _dimensionValidation.ValidateDocumentLinesAsync(
+            command.TenantId, command.CompanyId, dimensionValidationInputs, cancellationToken);
 
         doc.ReplaceDraftLines(newLines);
 

@@ -76,6 +76,9 @@ public class Account : AggregateRoot, ITenantScoped, ICompanyScoped, IAuditableE
     public Account? ParentAccount { get; set; }
     public ICollection<Account> SubAccounts { get; set; } = [];
 
+    /// <summary>سیاست‌های ابعاد مالی این حساب (اجباری/مجاز/ممنوع به ازای هر نوع بعد).</summary>
+    public ICollection<AccountDimensionPolicy> DimensionPolicies { get; set; } = [];
+
     public Account()
     {
     }

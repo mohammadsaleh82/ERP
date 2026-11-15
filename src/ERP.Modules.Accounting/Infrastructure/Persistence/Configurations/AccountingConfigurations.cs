@@ -305,3 +305,86 @@ public class AccountBalanceSnapshotConfiguration : IEntityTypeConfiguration<Acco
         builder.HasIndex(s => new { s.TenantId, s.CompanyId, s.FiscalYearId, s.AccountId });
     }
 }
+
+public class FinancialDimensionConfiguration : IEntityTypeConfiguration<FinancialDimension>
+{
+    public void Configure(EntityTypeBuilder<FinancialDimension> builder)
+    {
+        builder.ToTable("acc_financial_dimensions");
+        builder.HasKey(d => d.Id);
+
+        builder.Property(d => d.Code).HasMaxLength(30).IsRequired();
+        builder.Property(d => d.Name).HasMaxLength(200).IsRequired();
+        builder.Property(d => d.OwnerModule).HasMaxLength(50);
+        builder.Property(d => d.Version).IsConcurrencyToken();
+
+        // کد بعد مالی برای هر نوع، در هر شرکت یکتاست
+        builder.HasIndex(d => new { d.TenantId, d.CompanyId, d.DimensionType, d.Code }).IsUnique();
+        // جستجوی مرجع خارجی ماژول مالک
+        builder.HasIndex(d => new { d.TenantId, d.CompanyId, d.DimensionType, d.ExternalReferenceId });
+        builder.HasIndex(d => new { d.TenantId, d.CompanyId, d.DimensionType, d.IsActive });
+    }
+}
+
+public class AccountDimensionPolicyConfiguration : IEntityTypeConfiguration<AccountDimensionPolicy>
+{
+    public void Configure(EntityTypeBuilder<AccountDimensionPolicy> builder)
+    {
+        builder.ToTable("acc_account_dimension_policies");
+        builder.HasKey(p => p.Id);
+
+        builder.Property(p => p.Version).IsConcurrencyToken();
+
+        // حداکثر یک سیاست به ازای هر (حساب، نوع بعد)
+        builder.HasIndex(p => new { p.TenantId, p.CompanyId, p.AccountId, p.DimensionType }).IsUnique();
+    }
+}
+
+public class DimensionCombinationRuleConfiguration : IEntityTypeConfiguration<DimensionCombinationRule>
+{
+    public void Configure(EntityTypeBuilder<DimensionCombinationRule> builder)
+    {
+        builder.ToTable("acc_dimension_combination_rules");
+        builder.HasKey(r => r.Id);
+
+        builder.Property(r => r.Description).HasMaxLength(300);
+        builder.Property(r => r.Version).IsConcurrencyToken();
+
+        builder.HasIndex(r => new { r.TenantId, r.CompanyId });
+    }
+}
+
+public class DocumentLineDimensionConfiguration : IEntityTypeConfiguration<DocumentLineDimension>
+{
+    public void Configure(EntityTypeBuilder<DocumentLineDimension> builder)
+    {
+        builder.ToTable("acc_document_line_dimensions");
+        builder.HasKey(a => a.Id);
+
+        // یک مقدار به ازای هر نوع بعد در هر ردیف
+        builder.HasIndex(a => new { a.DocumentLineId, a.DimensionType }).IsUnique();
+        builder.HasIndex(a => new { a.TenantId, a.CompanyId, a.DimensionType, a.DimensionId });
+
+        builder.HasOne<AccountingDocumentLine>()
+            .WithMany(l => l.Dimensions)
+            .HasForeignKey(a => a.DocumentLineId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class GeneralLedgerEntryDimensionConfiguration : IEntityTypeConfiguration<GeneralLedgerEntryDimension>
+{
+    public void Configure(EntityTypeBuilder<GeneralLedgerEntryDimension> builder)
+    {
+        builder.ToTable("acc_gl_entry_dimensions");
+        builder.HasKey(a => a.Id);
+
+        builder.HasIndex(a => new { a.TenantId, a.CompanyId, a.DimensionType, a.DimensionId }); // محور گزارش تحلیلی
+        builder.HasIndex(a => new { a.GeneralLedgerEntryId, a.DimensionType }).IsUnique();
+
+        builder.HasOne<GeneralLedgerEntry>()
+            .WithMany()
+            .HasForeignKey(a => a.GeneralLedgerEntryId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

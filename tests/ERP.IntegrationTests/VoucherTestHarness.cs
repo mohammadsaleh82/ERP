@@ -99,8 +99,9 @@ public sealed class VoucherTestHarness : IDisposable
         var db = NewDbContext();
         var numbering = new VoucherNumberingService(db);
         var snapshots = new BalanceSnapshotService(db);
-        var docs = new DocumentService(db, numbering, new CreateDocumentRequestValidator(), new UpdateDocumentRequestValidator());
-        var engine = new VoucherPostingEngine(db, numbering, snapshots, Clock);
+        var dimensionValidation = new DimensionValidationApplicationService(db);
+        var docs = new DocumentService(db, numbering, new CreateDocumentRequestValidator(), new UpdateDocumentRequestValidator(), dimensionValidation);
+        var engine = new VoucherPostingEngine(db, numbering, snapshots, dimensionValidation, Clock);
         return (docs, engine, db);
     }
 

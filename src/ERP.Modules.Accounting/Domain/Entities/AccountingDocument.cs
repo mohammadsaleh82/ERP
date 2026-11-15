@@ -350,6 +350,13 @@ public class AccountingDocument : AggregateRoot, ITenantScoped, ICompanyScoped, 
                 originalLine.ForeignCurrencyCode,
                 originalLine.ForeignCurrencyAmount,
                 originalLine.ExchangeRate);
+
+            // ابعادی که از ستون‌های قدیمی پوشش داده نمی‌شوند (قرارداد، شخص، ابعاد سفارشی ...)
+            var reversalLine = reversalDoc.Lines.Last();
+            foreach (var dimension in originalLine.Dimensions)
+            {
+                reversalLine.AssignDimension(dimension.DimensionType, dimension.DimensionId);
+            }
         }
 
         // سند معکوس بلافاصله پس از ایجاد، قطعی می‌شود (تراز آینه‌ای تضمین‌شده است)
@@ -420,6 +427,12 @@ public class AccountingDocumentLine : Entity, ITenantScoped, ICompanyScoped, IAu
     public AccountingDocument? Document { get; set; }
     public Account? Account { get; set; }
 
+    /// <summary>
+    /// اختصاص‌های بعد مالی این ردیف (تفصیلی، مرکز هزینه، پروژه و ابعاد سفارشی).
+    /// منبع حقیقت ابعاد ردیف؛ ستون‌های قدیمی به این اختصاص‌ها نرمال‌سازی می‌شوند.
+    /// </summary>
+    public ICollection<DocumentLineDimension> Dimensions { get; set; } = [];
+
     public AccountingDocumentLine()
     {
     }
@@ -477,5 +490,77 @@ public class AccountingDocumentLine : Entity, ITenantScoped, ICompanyScoped, IAu
             DebitAmount = 0m;
             CreditAmount = amount;
         }
+
+        // ستون‌های قدیمی ابعاد؛ نرمال‌سازی به اختصاص‌های بعد مالی (فرزند) توسط
+        // سرویس سند پس از تخصیص شناسه سند انجام می‌شود (نرمال‌سازی جایگزین کامل).
     }
+
+    /// <summary>
+    /// اختصاص بعد مالی به ردیف. از هر نوع بعد حداکثر یک اختصاص مجاز است؛
+    /// اختصاص تکراری همان نوع با مقدار جدید جایگزین می‌شود.
+    /// </summary>
+    public void AssignDimension(FinancialDimensionType dimensionType, Guid dimensionId)
+    {
+        if (dimensionId == Guid.Empty)
+            throw new AccountingDomainException("Accounting.DimensionReferenceRequired",
+                $"شناسه بعد مالی نوع '{dimensionType}' برای ردیف {LineNumber} الزامی است.");
+
+        var existing = Dimensions.FirstOrDefault(d => d.DimensionType == dimensionType);
+        if (existing is not null)
+        {
+            if (existing.DimensionId == dimensionId)
+                return; // اختصاص تکراری؛ بی‌اثر
+
+            throw new AccountingDomainException("Accounting.DimensionDuplicateAssignment",
+                $"ردیف {LineNumber} هم‌زمان نمی‌تواند دو مقدار مختلف از نوع بعد '{dimensionType}' داشته باشد.");
+        }
+
+        Dimensions.Add(new DocumentLineDimension(TenantId, CompanyId, DocumentId, Id, dimensionType, dimensionId));
+    }
+
+    /// <summary>جایگزینی کامل ابعاد ردیف (در ویرایش پیش‌نویس).</summary>
+    public void ReplaceDimensions(IEnumerable<(FinancialDimensionType Type, Guid DimensionId)> assignments)
+    {
+        Dimensions.Clear();
+
+        foreach (var assignment in assignments)
+        {
+            AssignDimension(assignment.Type, assignment.DimensionId);
+        }
+    }
+
+    /// <summary>
+    /// ترکیب ستون‌های قدیمی (CostCenterId/ProjectId/DetailAccountId) با ابعاد جدید:
+    /// هر ستون قدیمی پرشده به‌صورت اختصاص بعد معادل نرمال می‌شود؛ تضاد ستون قدیمی با
+    /// اختصاص موجود از همان نوع، خطای دامنه است تا هیچ مسیر دوگانه‌ای باقی نماند.
+    /// </summary>
+    public IReadOnlyList<(FinancialDimensionType Type, Guid DimensionId)> NormalizeDimensionAssignments()
+    {
+        var legacy = new List<(FinancialDimensionType, Guid)>(3);
+        if (CostCenterId.HasValue)
+            legacy.Add((FinancialDimensionType.CostCenter, CostCenterId.Value));
+        if (ProjectId.HasValue)
+            legacy.Add((FinancialDimensionType.Project, ProjectId.Value));
+        if (DetailAccountId.HasValue)
+            legacy.Add((FinancialDimensionType.DetailAccount, DetailAccountId.Value));
+
+        var merged = new List<(FinancialDimensionType Type, Guid DimensionId)>(legacy.Count + Dimensions.Count);
+        merged.AddRange(legacy);
+
+        foreach (var assignment in Dimensions)
+        {
+            var conflictingLegacy = legacy.FirstOrDefault(l => l.Item1 == assignment.DimensionType);
+            if (conflictingLegacy.Item2 != Guid.Empty && conflictingLegacy.Item2 != assignment.DimensionId)
+            {
+                throw new AccountingDomainException("Accounting.DimensionLegacyConflict",
+                    $"ردیف {LineNumber} برای نوع بعد '{assignment.DimensionType}' هم‌زمان ستون قدیمی و اختصاص جدید متفاوت دارد.");
+            }
+
+            if (!merged.Any(m => m.Type == assignment.DimensionType))
+                merged.Add((assignment.DimensionType, assignment.DimensionId));
+        }
+
+        return merged;
+    }
+
 }

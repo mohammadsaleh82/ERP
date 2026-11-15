@@ -93,3 +93,5 @@ dotnet test tests/ERP.IntegrationTests/ --filter "FullyQualifiedName~VoucherConc
 - `tests/ERP.SecurityTests/VoucherSecurityTests.cs` — گاردهای امنیتی سند و مجوزها
 - `tests/ERP.IntegrationTests/LedgerReportingIntegrationTests.cs` — ۱۲ سناریوی دفتر روزنامه/کل/معین و موتور مانده (PROMPT 05)
 - `tests/ERP.IntegrationTests/LedgerPerformanceTests.cs` — تست کارایی با دیتاست ۱۰۰۰ سند / ۲۰۰۰ سطر دفتر کل
+- `tests/ERP.UnitTests/DimensionValidationTests.cs` — موتور قواعد ابعاد مالی خالص (PROMPT 06)
+- `tests/ERP.IntegrationTests/FinancialDimensionIntegrationTests.cs` — ۱۲ سناریوی تفصیلی شناور و ابعاد مالی

@@ -47,7 +47,8 @@ public class AccountingModuleApi : IAccountingModuleApi
             request.Lines.Select(l => new VoucherLineCommand(
                 l.AccountId, l.Side, l.Amount, l.Description,
                 l.CostCenterId, l.ProjectId, l.DetailAccountId,
-                l.ForeignCurrencyCode, l.ForeignAmount, l.ExchangeRate)).ToList(),
+                l.ForeignCurrencyCode, l.ForeignAmount, l.ExchangeRate,
+                l.Dimensions?.Select(d => new DimensionAssignmentCommand(d.DimensionType, d.DimensionId)).ToList())).ToList(),
             DocumentType.General,
             BranchId: null,
             request.ReferenceNumber,

@@ -40,6 +40,10 @@ public static class DependencyInjection
         services.AddScoped<IBalanceSnapshotService, BalanceSnapshotService>();
         services.AddScoped<ILedgerQueryService, LedgerQueryService>();
         services.AddScoped<IGlConsistencyService, GlConsistencyService>();
+        services.AddScoped<IDimensionValidationService, DimensionValidationApplicationService>();
+        services.AddScoped<IFinancialDimensionService, FinancialDimensionService>();
+        services.AddScoped<IDimensionAnalysisService, DimensionAnalysisService>();
+        services.AddScoped<Contracts.Interfaces.IFinancialDimensionApi, Application.Services.FinancialDimensionApi>();
         services.AddScoped<Contracts.Interfaces.IAccountingModuleApi, Application.Services.AccountingModuleApi>();
         services.AddScoped<CreateDocumentRequestValidator>();
         services.AddScoped<UpdateDocumentRequestValidator>();

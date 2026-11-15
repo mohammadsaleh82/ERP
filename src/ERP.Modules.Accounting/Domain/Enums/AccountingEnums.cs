@@ -154,3 +154,33 @@ public static class DocumentSourceModules
     public static string Normalize(string sourceModule) =>
         All.First(s => s.Equals(sourceModule.Trim(), StringComparison.OrdinalIgnoreCase));
 }
+
+/// <summary>
+/// انواع ابعاد مالی (Financial Dimensions).
+/// هر بعد مالی مفهومی شناور است که ردیف سند و سطر دفتر کل می‌توانند به آن اختصاص یابند
+/// تا گزارش‌گیری تحلیلی مالی بر اساس آن انجام شود.
+/// ابعاد متعلق به ماژول‌های دیگر (Party، Customer، Supplier، Employee) به‌صورت
+/// «آینه مرجع» (ExternalReference) در این ماژول ثبت می‌شوند؛ حسابداری هرگز نسخه مستقل
+/// و ناسازگار از داده مالکیت آن ماژول‌ها نگه نمی‌دارد.
+/// </summary>
+public enum FinancialDimensionType
+{
+    DetailAccount = 1,  // تفصیلی شناور (معین‌شناور)
+    CostCenter = 2,     // مرکز هزینه
+    Project = 3,        // پروژه
+    Branch = 4,         // شعبه
+    Contract = 5,       // قرارداد
+    Party = 6,          // شخص (مالکیت: ماژول Parties)
+    Customer = 7,       // مشتری (مالکیت: ماژول Parties/Sales)
+    Supplier = 8,       // تأمین‌کننده (مالکیت: ماژول Parties/Purchasing)
+    Employee = 9,       // کارمند (مالکیت: ماژول Payroll)
+    Custom = 10         // بعد مالی سفارشی شرکت
+}
+
+/// <summary>وضعیت سیاست بعد مالی برای یک حساب.</summary>
+public enum DimensionPolicyMode
+{
+    Required = 1,   // ثبت روی این حساب بدون این بعد مجاز نیست
+    Allowed = 2,    // این بعد روی حساب پذیرفته می‌شود (لیست سفید)
+    Forbidden = 3   // این بعد روی حساب مطلقاً ممنوع است
+}

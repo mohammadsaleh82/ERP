@@ -37,7 +37,13 @@ public sealed record VoucherLineFromSource(
     Guid? DetailAccountId = null,
     string? ForeignCurrencyCode = null,
     decimal? ForeignAmount = null,
-    decimal ExchangeRate = 1.0m);
+    decimal ExchangeRate = 1.0m,
+    IReadOnlyList<DimensionFromSource>? Dimensions = null);
+
+/// <summary>اختصاص بعد مالی به ردیف سند سیستمی از منشأ ماژول خارجی.</summary>
+public sealed record DimensionFromSource(
+    FinancialDimensionType DimensionType,
+    Guid DimensionId);
 
 public sealed record CreateVoucherFromSourceRequest(
     Guid TenantId,
