@@ -579,6 +579,10 @@ namespace ERP.Modules.Accounting.Migrations
                         .HasColumnType("text")
                         .HasColumnName("posted_by");
 
+                    b.Property<Guid?>("ReferenceDocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reference_document_id");
+
                     b.Property<string>("ReferenceNumber")
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
@@ -1420,6 +1424,240 @@ namespace ERP.Modules.Accounting.Migrations
                     b.ToTable("acc_fiscal_years", (string)null);
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FiscalYearClosing", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ClosedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("closed_at_utc");
+
+                    b.Property<string>("ClosedBy")
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("closed_by");
+
+                    b.Property<Guid?>("ClosingDocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("closing_document_id");
+
+                    b.Property<long?>("ClosingDocumentNumber")
+                        .HasColumnType("bigint")
+                        .HasColumnName("closing_document_number");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<string>("FailedReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("failed_reason");
+
+                    b.Property<Guid>("FiscalYearId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fiscal_year_id");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at_utc");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<decimal?>("NetIncome")
+                        .HasPrecision(28, 4)
+                        .HasColumnType("numeric(28,4)")
+                        .HasColumnName("net_income");
+
+                    b.Property<Guid>("RetainedEarningsAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("retained_earnings_account_id");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at_utc");
+
+                    b.Property<string>("StartedBy")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("started_by");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<decimal?>("TotalExpense")
+                        .HasPrecision(28, 4)
+                        .HasColumnType("numeric(28,4)")
+                        .HasColumnName("total_expense");
+
+                    b.Property<decimal?>("TotalRevenue")
+                        .HasPrecision(28, 4)
+                        .HasColumnType("numeric(28,4)")
+                        .HasColumnName("total_revenue");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_fiscal_year_closings");
+
+                    b.HasIndex("TenantId", "CompanyId", "FiscalYearId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_acc_fiscal_year_closings_tenant_id_company_id_fiscal_year_id");
+
+                    b.ToTable("acc_fiscal_year_closings", (string)null);
+                });
+
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FiscalYearClosingStep", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("FinishedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("finished_at_utc");
+
+                    b.Property<Guid>("FiscalYearClosingId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fiscal_year_closing_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("Output")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("output");
+
+                    b.Property<DateTimeOffset>("StartedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at_utc");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<int>("StepNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("step_number");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_fiscal_year_closing_steps");
+
+                    b.HasIndex("FiscalYearClosingId", "StepNumber")
+                        .HasDatabaseName("ix_acc_fiscal_year_closing_steps_fiscal_year_closing_id_step_n");
+
+                    b.ToTable("acc_fiscal_year_closing_steps", (string)null);
+                });
+
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FiscalYearReopening", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ApprovedBy")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("approved_by");
+
+                    b.Property<string>("ChangesSummary")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("changes_summary");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("FiscalYearId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fiscal_year_id");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at_utc");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<string>("NextOpeningImpact")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("next_opening_impact");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTimeOffset>("ReopenedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reopened_at_utc");
+
+                    b.Property<string>("RequestedBy")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)")
+                        .HasColumnName("requested_by");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_fiscal_year_reopenings");
+
+                    b.HasIndex("TenantId", "CompanyId", "FiscalYearId")
+                        .HasDatabaseName("ix_acc_fiscal_year_reopenings_tenant_id_company_id_fiscal_year");
+
+                    b.ToTable("acc_fiscal_year_reopenings", (string)null);
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.GeneralLedgerEntry", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1790,6 +2028,16 @@ namespace ERP.Modules.Accounting.Migrations
                     b.Navigation("FiscalYear");
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FiscalYearClosingStep", b =>
+                {
+                    b.HasOne("ERP.Modules.Accounting.Domain.Entities.FiscalYearClosing", null)
+                        .WithMany("Steps")
+                        .HasForeignKey("FiscalYearClosingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_acc_fiscal_year_closing_steps_acc_fiscal_year_closings_fisc");
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.GeneralLedgerEntryDimension", b =>
                 {
                     b.HasOne("ERP.Modules.Accounting.Domain.Entities.GeneralLedgerEntry", null)
@@ -1832,6 +2080,11 @@ namespace ERP.Modules.Accounting.Migrations
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FiscalYear", b =>
                 {
                     b.Navigation("Periods");
+                });
+
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.FiscalYearClosing", b =>
+                {
+                    b.Navigation("Steps");
                 });
 #pragma warning restore 612, 618
         }

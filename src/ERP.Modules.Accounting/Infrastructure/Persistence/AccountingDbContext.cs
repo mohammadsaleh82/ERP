@@ -32,6 +32,9 @@ public class AccountingDbContext : BaseDbContext
     public DbSet<DimensionCombinationRule> DimensionCombinationRules => Set<DimensionCombinationRule>();
     public DbSet<DocumentLineDimension> DocumentLineDimensions => Set<DocumentLineDimension>();
     public DbSet<GeneralLedgerEntryDimension> GeneralLedgerEntryDimensions => Set<GeneralLedgerEntryDimension>();
+    public DbSet<FiscalYearClosing> FiscalYearClosings => Set<FiscalYearClosing>();
+    public DbSet<FiscalYearClosingStep> FiscalYearClosingSteps => Set<FiscalYearClosingStep>();
+    public DbSet<FiscalYearReopening> FiscalYearReopenings => Set<FiscalYearReopening>();
 
     public AccountingDbContext(
         DbContextOptions<AccountingDbContext> options,

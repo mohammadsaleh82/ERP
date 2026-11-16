@@ -388,3 +388,58 @@ public class GeneralLedgerEntryDimensionConfiguration : IEntityTypeConfiguration
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+
+public class FiscalYearClosingConfiguration : IEntityTypeConfiguration<FiscalYearClosing>
+{
+    public void Configure(EntityTypeBuilder<FiscalYearClosing> builder)
+    {
+        builder.ToTable("acc_fiscal_year_closings");
+        builder.HasKey(c => c.Id);
+
+        builder.Property(c => c.FailedReason).HasMaxLength(2000);
+        builder.Property(c => c.StartedBy).HasMaxLength(120);
+        builder.Property(c => c.ClosedBy).HasMaxLength(120);
+        builder.Property(c => c.Version).IsConcurrencyToken();
+
+        // یک گردش‌کار اختتامیه به ازای هر سال مالی شرکت
+        builder.HasIndex(c => new { c.TenantId, c.CompanyId, c.FiscalYearId }).IsUnique();
+
+        builder.HasMany(c => c.Steps)
+            .WithOne()
+            .HasForeignKey(s => s.FiscalYearClosingId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class FiscalYearClosingStepConfiguration : IEntityTypeConfiguration<FiscalYearClosingStep>
+{
+    public void Configure(EntityTypeBuilder<FiscalYearClosingStep> builder)
+    {
+        builder.ToTable("acc_fiscal_year_closing_steps");
+        builder.HasKey(s => s.Id);
+
+        builder.Property(s => s.Name).HasMaxLength(200).IsRequired();
+        builder.Property(s => s.Output).HasMaxLength(2000);
+
+        builder.HasIndex(s => new { s.FiscalYearClosingId, s.StepNumber });
+    }
+}
+
+public class FiscalYearReopeningConfiguration : IEntityTypeConfiguration<FiscalYearReopening>
+{
+    public void Configure(EntityTypeBuilder<FiscalYearReopening> builder)
+    {
+        builder.ToTable("acc_fiscal_year_reopenings");
+        builder.HasKey(r => r.Id);
+
+        builder.Property(r => r.Reason).HasMaxLength(1000).IsRequired();
+        builder.Property(r => r.RequestedBy).HasMaxLength(120).IsRequired();
+        builder.Property(r => r.ApprovedBy).HasMaxLength(120).IsRequired();
+        builder.Property(r => r.NextOpeningImpact).HasMaxLength(1000).IsRequired();
+        builder.Property(r => r.ChangesSummary).HasMaxLength(2000);
+        builder.Property(r => r.Version).IsConcurrencyToken();
+
+        builder.HasIndex(r => new { r.TenantId, r.CompanyId, r.FiscalYearId });
+    }
+}

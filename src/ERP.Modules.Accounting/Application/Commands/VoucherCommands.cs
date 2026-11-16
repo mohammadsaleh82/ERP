@@ -34,7 +34,8 @@ public sealed record CreateVoucherDraftCommand(
     string? SourceModule,
     Guid? SourceDocumentId,
     string? IdempotencyKey,
-    string PerformedBy);
+    string PerformedBy,
+    Guid? ReferenceDocumentId = null);
 
 public sealed record UpdateVoucherDraftCommand(
     Guid TenantId,

@@ -154,6 +154,10 @@ public class DocumentService : IDocumentService
             dimensionValidationInputs.Add(new DocumentLineValidationInput(line.AccountId, documentLine.LineNumber, []));
         }
 
+        // اتصال به سند مرجع (اسناد اصلاحی/تعدیلی) در همان زمینه ایجاد
+        if (command.ReferenceDocumentId.HasValue)
+            doc.ReferenceDocumentId = command.ReferenceDocumentId;
+
         _db.Documents.Add(doc);
 
         // ماده‌سازی اختصاص‌های بعد مالی پس از تخصیص شناسه سند توسط EF

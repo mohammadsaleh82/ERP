@@ -29,6 +29,12 @@ public class AccountingDocument : AggregateRoot, ITenantScoped, ICompanyScoped, 
     public Guid? SourceDocumentId { get; set; }
     public Guid? ReversedDocumentId { get; set; }
 
+    /// <summary>
+    /// سند مرجع (برای اسناد اصلاحی/تعدیلی متصل به سند یا ردیف مرجع).
+    /// سند اصلی هرگز بازنویسی نمی‌شود؛ اصلاح همیشه سند جدیدی متصل به مرجع است.
+    /// </summary>
+    public Guid? ReferenceDocumentId { get; set; }
+
     public decimal TotalDebit { get; private set; }
     public decimal TotalCredit { get; private set; }
     public string CurrencyCode { get; set; } = "IRR";

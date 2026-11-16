@@ -184,3 +184,22 @@ public enum DimensionPolicyMode
     Allowed = 2,    // این بعد روی حساب پذیرفته می‌شود (لیست سفید)
     Forbidden = 3   // این بعد روی حساب مطلقاً ممنوع است
 }
+
+/// <summary>وضعیت گردش‌کار اختتامیه سال مالی (مرحله‌ای و قابل پیگیری).</summary>
+public enum FiscalClosingStatus
+{
+    NotStarted = 1,   // هنوز آغاز نشده
+    Validating = 2,   // در حال اعتبارسنجی (دوره‌ها، اسناد، تراز)
+    ReadyToClose = 3, // اعتبارسنجی کامل؛ آماده اجرای اختتامیه
+    Closing = 4,      // در حال ایجاد سند اختتامیه و بستن سال
+    Closed = 5,       // اختتامیه کامل و سال بسته شده
+    Failed = 6        // شکست با ثبت علت و مراحل انجام‌شده (قابل بازیابی)
+}
+
+/// <summary>وضعیت هر مرحله گردش‌کار اختتامیه.</summary>
+public enum FiscalClosingStepStatus
+{
+    Pending = 1,
+    Completed = 2,
+    Failed = 3
+}

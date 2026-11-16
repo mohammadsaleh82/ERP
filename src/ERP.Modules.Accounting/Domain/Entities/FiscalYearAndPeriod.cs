@@ -181,6 +181,28 @@ public class FiscalYear : AggregateRoot, ITenantScoped, ICompanyScoped, IAuditab
 
         AddDomainEvent(FiscalYearClosedEvent.Create(Id, TenantId, CompanyId, YearNumber));
     }
+
+    /// <summary>
+    /// بازگشایی سال بسته‌شده — فقط پس از فرایند رسمی بازگشایی (مجوز ویژه + دلیل +
+    /// درخواست‌دهنده و تأییدکننده متمایز + بررسی اثر بر افتتاحیه سال بعد).
+    /// دوره‌های بسته‌شده «بازگشایی نمی‌شوند»؛ پذیرش سند در هر دوره نیازمند
+    /// بازگشایی صریح همان دوره است تا هیچ سندی بدون کنترل قابل ثبت نباشد.
+    /// </summary>
+    public void Reopen(string reopenedBy, DateTimeOffset nowUtc)
+    {
+        if (Status != FiscalYearStatus.Closed)
+            throw new AccountingDomainException("Accounting.FiscalYearNotClosed",
+                $"تنها سال مالی بسته‌شده قابل بازگشایی است؛ وضعیت '{Name}' اکنون '{Status}' است.");
+
+        if (string.IsNullOrWhiteSpace(reopenedBy))
+            throw new AccountingDomainException("Accounting.EmptyPerformer", "انجام‌دهنده بازگشایی الزامی است.");
+
+        Status = FiscalYearStatus.Open;
+        ClosedAtUtc = null;
+        ClosedBy = null;
+        LastModifiedBy = reopenedBy;
+        LastModifiedAtUtc = nowUtc;
+    }
 }
 
 public class FiscalPeriod : Entity, ITenantScoped, ICompanyScoped, IAuditableEntity

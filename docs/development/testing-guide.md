@@ -95,3 +95,5 @@ dotnet test tests/ERP.IntegrationTests/ --filter "FullyQualifiedName~VoucherConc
 - `tests/ERP.IntegrationTests/LedgerPerformanceTests.cs` — تست کارایی با دیتاست ۱۰۰۰ سند / ۲۰۰۰ سطر دفتر کل
 - `tests/ERP.UnitTests/DimensionValidationTests.cs` — موتور قواعد ابعاد مالی خالص (PROMPT 06)
 - `tests/ERP.IntegrationTests/FinancialDimensionIntegrationTests.cs` — ۱۲ سناریوی تفصیلی شناور و ابعاد مالی
+- `tests/ERP.IntegrationTests/FiscalYearClosingIntegrationTests.cs` — ۱۵ سناریوی افتتاحیه/اصلاح/معکوس/اختتامیه/بازگشایی
+- `tests/ERP.IntegrationTests/FinancialBalancePropertyTests.cs` — ناورداهای حفظ تراز در چرخه کامل روی ۲۰ seed تصادفی
