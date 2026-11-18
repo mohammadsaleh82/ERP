@@ -203,3 +203,33 @@ public enum FiscalClosingStepStatus
     Completed = 2,
     Failed = 3
 }
+
+/// <summary>
+/// طبقه‌بندی حسابداری برای گزارش‌های مالی — از تنظیمات گزارش‌گیری شرکت
+/// (بر اساس کد ریشه حساب) با پیش‌فرض‌های برآمده از ماهیت حساب.
+/// </summary>
+public enum ReportAccountCategory
+{
+    CurrentAsset = 1,            // دارایی جاری
+    NonCurrentAsset = 2,         // دارایی غیرجاری
+    AccountsReceivable = 3,      // حساب دریافتنی (بدهکاران)
+    CashAndCashEquivalents = 4,  // وجوه نقد و معادل‌ها (صندوق و بانک)
+    CurrentLiability = 5,        // بدهی جاری
+    NonCurrentLiability = 6,     // بدهی غیرجاری
+    AccountsPayable = 7,         // حساب پرداختنی (بستانکاران)
+    Equity = 8,                  // حقوق مالکانه
+    Revenue = 9,                 // درآمد عملیاتی
+    CostOfGoodsSold = 10,        // بهای تمام‌شده کالای فروش‌رفته
+    OperatingExpense = 11,       // هزینه عملیاتی
+    TaxExpense = 12,             // مالیات
+    OtherIncome = 13,            // درآمد غیرعملیاتی
+    OtherExpense = 14            // هزینه غیرعملیاتی
+}
+
+/// <summary>طبقه‌بندی جریان وجوه نقد برای روش مستقیم.</summary>
+public enum CashFlowCategory
+{
+    Operating = 1,   // عملیاتی
+    Investing = 2,   // سرمایه‌گذاری
+    Financing = 3    // تأمین مالی
+}

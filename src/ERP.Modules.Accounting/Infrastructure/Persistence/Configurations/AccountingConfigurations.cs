@@ -269,6 +269,7 @@ public class GeneralLedgerEntryConfiguration : IEntityTypeConfiguration<GeneralL
         builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.SourceModule, e.SourceDocumentId });
         builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.BranchId, e.EntryDate }); // فیلتر شعبه در گزارش‌های دفتر
         builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.EntryDate, e.DocumentNumber }); // ترتیب دفتر روزنامه
+        builder.HasIndex(e => new { e.TenantId, e.CompanyId, e.FiscalYearId, e.EntryDate }); // گزارش‌های بازه تاریخی در سال مالی
     }
 }
 
@@ -441,5 +442,33 @@ public class FiscalYearReopeningConfiguration : IEntityTypeConfiguration<FiscalY
         builder.Property(r => r.Version).IsConcurrencyToken();
 
         builder.HasIndex(r => new { r.TenantId, r.CompanyId, r.FiscalYearId });
+    }
+}
+
+
+public class ReportingClassificationConfiguration : IEntityTypeConfiguration<ReportingClassification>
+{
+    public void Configure(EntityTypeBuilder<ReportingClassification> builder)
+    {
+        builder.ToTable("acc_reporting_classifications");
+        builder.HasKey(c => c.Id);
+
+        builder.Property(c => c.RootCode).HasMaxLength(2).IsRequired();
+        builder.Property(c => c.Version).IsConcurrencyToken();
+
+        builder.HasIndex(c => new { c.TenantId, c.CompanyId, c.RootCode }).IsUnique();
+    }
+}
+
+public class CashFlowClassificationConfiguration : IEntityTypeConfiguration<CashFlowClassification>
+{
+    public void Configure(EntityTypeBuilder<CashFlowClassification> builder)
+    {
+        builder.ToTable("acc_cash_flow_classifications");
+        builder.HasKey(c => c.Id);
+
+        builder.Property(c => c.Version).IsConcurrencyToken();
+
+        builder.HasIndex(c => new { c.TenantId, c.CompanyId, c.AccountId }).IsUnique();
     }
 }

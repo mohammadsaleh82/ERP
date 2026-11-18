@@ -986,6 +986,60 @@ namespace ERP.Modules.Accounting.Migrations
                     b.ToTable("acc_accounting_settings_history", (string)null);
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.CashFlowClassification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer")
+                        .HasColumnName("category");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at_utc");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_cash_flow_classifications");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_acc_cash_flow_classifications_tenant_id_company_id_account_");
+
+                    b.ToTable("acc_cash_flow_classifications", (string)null);
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.DimensionCombinationRule", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1808,6 +1862,9 @@ namespace ERP.Modules.Accounting.Migrations
                     b.HasIndex("TenantId", "CompanyId", "EntryDate", "DocumentNumber")
                         .HasDatabaseName("ix_acc_gl_entries_tenant_id_company_id_entry_date_document_num");
 
+                    b.HasIndex("TenantId", "CompanyId", "FiscalYearId", "EntryDate")
+                        .HasDatabaseName("ix_acc_gl_entries_tenant_id_company_id_fiscal_year_id_entry_da");
+
                     b.HasIndex("TenantId", "CompanyId", "FiscalYearId", "FiscalPeriodId")
                         .HasDatabaseName("ix_acc_gl_entries_tenant_id_company_id_fiscal_year_id_fiscal_p");
 
@@ -1863,6 +1920,62 @@ namespace ERP.Modules.Accounting.Migrations
                         .HasDatabaseName("ix_acc_gl_entry_dimensions_tenant_id_company_id_dimension_type");
 
                     b.ToTable("acc_gl_entry_dimensions", (string)null);
+                });
+
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.ReportingClassification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("Category")
+                        .HasColumnType("integer")
+                        .HasColumnName("category");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at_utc");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<string>("RootCode")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("root_code");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_reporting_classifications");
+
+                    b.HasIndex("TenantId", "CompanyId", "RootCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_acc_reporting_classifications_tenant_id_company_id_root_code");
+
+                    b.ToTable("acc_reporting_classifications", (string)null);
                 });
 
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.VoucherSequence", b =>

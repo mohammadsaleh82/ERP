@@ -49,6 +49,13 @@ public static class DependencyInjection
         services.AddScoped<IAdjustmentVoucherService, AdjustmentVoucherService>();
         services.AddScoped<IFiscalClosingWorkflowService, FiscalClosingWorkflowService>();
         services.AddScoped<IFiscalYearReopeningService, FiscalYearReopeningService>();
+        services.AddScoped<Application.Services.Reports.ITrialBalanceService, Application.Services.Reports.TrialBalanceService>();
+        services.AddScoped<Application.Services.Reports.ILedgerReportsService, Application.Services.Reports.LedgerReportsService>();
+        services.AddScoped<Application.Services.Reports.IFinancialStatementsService, Application.Services.Reports.FinancialStatementsService>();
+        services.AddScoped<Application.Services.Reports.ICashFlowService, Application.Services.Reports.CashFlowService>();
+        services.AddScoped<Application.Services.Reports.IReceivablesPayablesService, Application.Services.Reports.ReceivablesPayablesService>();
+        services.AddScoped<Application.Services.Reports.IReportClassificationService, Application.Services.Reports.ReportClassificationService>();
+        services.AddSingleton<Infrastructure.Export.IReportExportService, Infrastructure.Export.ReportExportService>();
         services.AddScoped<Contracts.Interfaces.IAccountingModuleApi, Application.Services.AccountingModuleApi>();
         services.AddScoped<CreateDocumentRequestValidator>();
         services.AddScoped<UpdateDocumentRequestValidator>();

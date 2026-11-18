@@ -97,3 +97,4 @@ dotnet test tests/ERP.IntegrationTests/ --filter "FullyQualifiedName~VoucherConc
 - `tests/ERP.IntegrationTests/FinancialDimensionIntegrationTests.cs` — ۱۲ سناریوی تفصیلی شناور و ابعاد مالی
 - `tests/ERP.IntegrationTests/FiscalYearClosingIntegrationTests.cs` — ۱۵ سناریوی افتتاحیه/اصلاح/معکوس/اختتامیه/بازگشایی
 - `tests/ERP.IntegrationTests/FinancialBalancePropertyTests.cs` — ناورداهای حفظ تراز در چرخه کامل روی ۲۰ seed تصادفی
+- `tests/ERP.IntegrationTests/FinancialReportsIntegrationTests.cs` — ۱۴ سناریوی گزارش مالی و تطابق خروجی‌ها با API

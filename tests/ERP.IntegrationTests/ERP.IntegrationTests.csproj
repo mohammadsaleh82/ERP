@@ -22,7 +22,8 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-  </ItemGroup>
+      <PackageReference Include="UglyToad.PdfPig" />
+</ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\ERP.Api\ERP.Api.csproj" />
