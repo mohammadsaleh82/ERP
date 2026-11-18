@@ -5,6 +5,7 @@ using ERP.Modules.Accounting.Domain.Entities;
 using ERP.Modules.Accounting.Domain.Enums;
 using ERP.Modules.Accounting.Domain.Exceptions;
 using ERP.Modules.Accounting.Infrastructure.Persistence;
+using ERP.Modules.Accounting.Application.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 
 namespace ERP.Modules.Accounting.Application.Services;
@@ -34,10 +35,12 @@ public sealed record ReopenFiscalYearCommand(
 public class FiscalYearReopeningService : IFiscalYearReopeningService
 {
     private readonly AccountingDbContext _db;
+    private readonly IAccountingAuditTrailService _auditTrail;
 
-    public FiscalYearReopeningService(AccountingDbContext db)
+    public FiscalYearReopeningService(AccountingDbContext db, IAccountingAuditTrailService auditTrail)
     {
         _db = db;
+        _auditTrail = auditTrail;
     }
 
     public async Task<FiscalYearReopeningDto> ReopenAsync(ReopenFiscalYearCommand command, CancellationToken cancellationToken = default)
@@ -100,6 +103,15 @@ public class FiscalYearReopeningService : IFiscalYearReopeningService
 
         _db.FiscalYearReopenings.Add(reopening);
         await _db.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            command.TenantId, command.CompanyId, AuditTrailActions.FiscalYearReopened,
+            "FiscalYear", command.FiscalYearId,
+            before: new Dictionary<string, object?> { ["status"] = "Closed" },
+            after: new Dictionary<string, object?> { ["status"] = "Open", ["approvedBy"] = command.ApprovedBy },
+            reason: command.Reason,
+            userId: command.ApprovedBy,
+            cancellationToken: cancellationToken);
 
         return ToDto(reopening);
     }

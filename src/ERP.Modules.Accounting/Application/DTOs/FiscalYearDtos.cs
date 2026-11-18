@@ -83,6 +83,8 @@ public sealed record AccountingSettingsDto(
     DateOnly? LockDate,
     bool AllowUnbalancedDraft,
     bool AutoNumberingEnabled,
+    bool RequireSeparateApprover,
+    bool RequireSeparatePoster,
     uint Version,
     DateTimeOffset? LastModifiedAtUtc);
 
@@ -100,6 +102,8 @@ public sealed record UpdateAccountingSettingsRequest(
     DateOnly? LockDate,
     bool AllowUnbalancedDraft,
     bool AutoNumberingEnabled,
+    bool RequireSeparateApprover = false,
+    bool RequireSeparatePoster = false,
     string? ChangeReason = null);
 
 public sealed record AccountingSettingsHistoryDto(

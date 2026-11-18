@@ -107,7 +107,7 @@ public class FiscalOperationsController : BaseApiController
 
     /// <summary>معکوس‌سازی سند قطعی با علت اصلاح اجباری و ثبت سابقه کامل.</summary>
     [HttpPost("reversals")]
-    [HasPermission("accounting:reversals:write")]
+    [HasPermission(AccountingPermissions.ReverseVouchers)]
     public async Task<IActionResult> ReverseDocumentWithReason([FromBody] ReverseDocumentWithReasonRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, user) = GetRequiredContext();
@@ -130,7 +130,7 @@ public class FiscalOperationsController : BaseApiController
 
     /// <summary>اجرای گردش‌کار مرحله‌ای اختتامیه سال مالی.</summary>
     [HttpPost("closing-workflows")]
-    [HasPermission("accounting:fiscalyear:close")]
+    [HasPermission(AccountingPermissions.CloseFiscalYear)]
     public async Task<IActionResult> RunClosing([FromBody] RunFiscalClosingRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, user) = GetRequiredContext();
@@ -156,7 +156,7 @@ public class FiscalOperationsController : BaseApiController
 
     /// <summary>بازگشایی رسمی سال مالی بسته‌شده (مجوز ویژه + دلیل + تأییدکننده متمایز).</summary>
     [HttpPost("fiscal-years/{fiscalYearId:guid}/reopen")]
-    [HasPermission("accounting:fiscalyear:reopen")]
+    [HasPermission(AccountingPermissions.ReopenFiscalYear)]
     public async Task<IActionResult> ReopenFiscalYear(Guid fiscalYearId, [FromBody] ReopenFiscalYearRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, user) = GetRequiredContext();

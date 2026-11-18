@@ -472,3 +472,27 @@ public class CashFlowClassificationConfiguration : IEntityTypeConfiguration<Cash
         builder.HasIndex(c => new { c.TenantId, c.CompanyId, c.AccountId }).IsUnique();
     }
 }
+
+
+/// <summary>دفتر ممیزی عمومی — Append-Only: فقط ثبت و خواندن.</summary>
+public class AccountingAuditTrailConfiguration : IEntityTypeConfiguration<Domain.Entities.AccountingAuditTrail>
+{
+    public void Configure(EntityTypeBuilder<Domain.Entities.AccountingAuditTrail> builder)
+    {
+        builder.ToTable("acc_audit_trail");
+        builder.HasKey(t => t.Id);
+
+        builder.Property(t => t.UserId).HasMaxLength(200).IsRequired();
+        builder.Property(t => t.Action).HasMaxLength(100).IsRequired();
+        builder.Property(t => t.EntityType).HasMaxLength(100).IsRequired();
+        builder.Property(t => t.CorrelationId).HasMaxLength(100).IsRequired();
+        builder.Property(t => t.Reason).HasMaxLength(500);
+        builder.Property(t => t.BeforeSnapshot).HasMaxLength(8000);
+        builder.Property(t => t.AfterSnapshot).HasMaxLength(8000);
+        builder.Property(t => t.Version).IsConcurrencyToken();
+
+        builder.HasIndex(t => new { t.TenantId, t.CompanyId, t.TimestampUtc });
+        builder.HasIndex(t => new { t.TenantId, t.CompanyId, t.Action, t.EntityId });
+        builder.HasIndex(t => new { t.TenantId, t.CompanyId, t.CorrelationId });
+    }
+}

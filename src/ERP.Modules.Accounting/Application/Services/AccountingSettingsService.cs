@@ -1,4 +1,5 @@
 using ERP.Modules.Accounting.Application.DTOs;
+using ERP.Modules.Accounting.Application.Services.Audit;
 using ERP.Modules.Accounting.Domain.Entities;
 using ERP.Modules.Accounting.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -15,10 +16,12 @@ public interface IAccountingSettingsService
 public class AccountingSettingsService : IAccountingSettingsService
 {
     private readonly AccountingDbContext _dbContext;
+    private readonly Audit.IAccountingAuditTrailService _auditTrail;
 
-    public AccountingSettingsService(AccountingDbContext dbContext)
+    public AccountingSettingsService(AccountingDbContext dbContext, Audit.IAccountingAuditTrailService auditTrail)
     {
         _dbContext = dbContext;
+        _auditTrail = auditTrail;
     }
 
     public async Task<AccountingSettingsDto> GetSettingsAsync(Guid tenantId, Guid companyId, CancellationToken cancellationToken = default)
@@ -53,6 +56,18 @@ public class AccountingSettingsService : IAccountingSettingsService
             await _dbContext.SaveChangesAsync(cancellationToken);
         }
 
+        // Snapshot وضعیت پیش برای ممیزی
+        var beforeSnapshot = new Dictionary<string, object?>
+        {
+            ["approvalPolicy"] = settings.ApprovalPolicy.ToString(),
+            ["requireSeparateApprover"] = settings.RequireSeparateApprover,
+            ["requireSeparatePoster"] = settings.RequireSeparatePoster,
+            ["allowUnbalancedDraft"] = settings.AllowUnbalancedDraft,
+            ["autoNumberingEnabled"] = settings.AutoNumberingEnabled,
+            ["lockDate"] = settings.LockDate?.ToString("O"),
+            ["version"] = (long)settings.Version
+        };
+
         // 1. ثبت سابقه تغییرات در تاریخچه پیش از اعمال ویرایش جدید
         var historySnapshot = AccountingSettingsHistory.CreateSnapshot(
             settings,
@@ -76,9 +91,28 @@ public class AccountingSettingsService : IAccountingSettingsService
             request.DefaultAccountTemplateId,
             request.LockDate,
             request.AllowUnbalancedDraft,
-            request.AutoNumberingEnabled);
+            request.AutoNumberingEnabled,
+            request.RequireSeparateApprover,
+            request.RequireSeparatePoster);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        // ثبت ممیزی تغییر تنظیمات با Snapshot پیش/پس (پاک‌سازی‌شده)
+        await _auditTrail.RecordAsync(
+            tenantId, companyId, AuditTrailActions.SettingsUpdated, "AccountingSettings", settings.Id,
+            before: beforeSnapshot,
+            after: new Dictionary<string, object?>
+            {
+                ["approvalPolicy"] = settings.ApprovalPolicy.ToString(),
+                ["requireSeparateApprover"] = settings.RequireSeparateApprover,
+                ["requireSeparatePoster"] = settings.RequireSeparatePoster,
+                ["allowUnbalancedDraft"] = settings.AllowUnbalancedDraft,
+                ["autoNumberingEnabled"] = settings.AutoNumberingEnabled,
+                ["lockDate"] = settings.LockDate?.ToString("O"),
+                ["version"] = (long)settings.Version
+            },
+            reason: request.ChangeReason,
+            cancellationToken: cancellationToken);
 
         return MapToDto(settings);
     }
@@ -130,6 +164,8 @@ public class AccountingSettingsService : IAccountingSettingsService
             s.LockDate,
             s.AllowUnbalancedDraft,
             s.AutoNumberingEnabled,
+            s.RequireSeparateApprover,
+            s.RequireSeparatePoster,
             s.Version,
             s.LastModifiedAtUtc);
 }

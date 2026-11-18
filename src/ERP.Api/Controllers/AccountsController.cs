@@ -35,7 +35,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpPost]
-    [HasPermission("accounting:accounts:create")]
+    [HasPermission(AccountingPermissions.CreateAccounts)]
     public async Task<IActionResult> Create([FromBody] CreateAccountRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -44,7 +44,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpPut("{id:guid}")]
-    [HasPermission("accounting:accounts:update")]
+    [HasPermission(AccountingPermissions.UpdateAccounts)]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateAccountRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -53,7 +53,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpPost("{id:guid}/deactivate")]
-    [HasPermission("accounting:accounts:update")]
+    [HasPermission(AccountingPermissions.DeactivateAccounts)]
     public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -62,7 +62,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpPost("{id:guid}/activate")]
-    [HasPermission("accounting:accounts:update")]
+    [HasPermission(AccountingPermissions.UpdateAccounts)]
     public async Task<IActionResult> Activate(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -71,7 +71,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpDelete("{id:guid}")]
-    [HasPermission("accounting:accounts:delete")]
+    [HasPermission(AccountingPermissions.DeleteAccounts)]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -80,7 +80,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpGet("{id:guid}")]
-    [HasPermission("accounting:accounts:read")]
+    [HasPermission(AccountingPermissions.ViewAccounts)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -89,7 +89,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpGet("by-code/{code}")]
-    [HasPermission("accounting:accounts:read")]
+    [HasPermission(AccountingPermissions.ViewAccounts)]
     public async Task<IActionResult> GetByCode(string code, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -98,7 +98,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpGet("tree")]
-    [HasPermission("accounting:accounts:read")]
+    [HasPermission(AccountingPermissions.ViewAccounts)]
     public async Task<IActionResult> GetTree(CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -107,7 +107,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpGet("{id:guid}/children")]
-    [HasPermission("accounting:accounts:read")]
+    [HasPermission(AccountingPermissions.ViewAccounts)]
     public async Task<IActionResult> GetChildren(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -116,7 +116,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpGet("{id:guid}/breadcrumb")]
-    [HasPermission("accounting:accounts:read")]
+    [HasPermission(AccountingPermissions.ViewAccounts)]
     public async Task<IActionResult> GetBreadcrumb(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -125,7 +125,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpGet]
-    [HasPermission("accounting:accounts:read")]
+    [HasPermission(AccountingPermissions.ViewAccounts)]
     public async Task<IActionResult> Search([FromQuery] AccountFilterRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -134,7 +134,7 @@ public class AccountsController : BaseApiController
     }
 
     [HttpGet("postable")]
-    [HasPermission("accounting:accounts:read")]
+    [HasPermission(AccountingPermissions.ViewAccounts)]
     public async Task<IActionResult> GetPostable(CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();

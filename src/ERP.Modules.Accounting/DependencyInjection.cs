@@ -56,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<Application.Services.Reports.IReceivablesPayablesService, Application.Services.Reports.ReceivablesPayablesService>();
         services.AddScoped<Application.Services.Reports.IReportClassificationService, Application.Services.Reports.ReportClassificationService>();
         services.AddSingleton<Infrastructure.Export.IReportExportService, Infrastructure.Export.ReportExportService>();
+        services.AddScoped<Application.Services.Audit.IAccountingAuditTrailService, Application.Services.Audit.AccountingAuditTrailService>();
         services.AddScoped<Contracts.Interfaces.IAccountingModuleApi, Application.Services.AccountingModuleApi>();
         services.AddScoped<CreateDocumentRequestValidator>();
         services.AddScoped<UpdateDocumentRequestValidator>();

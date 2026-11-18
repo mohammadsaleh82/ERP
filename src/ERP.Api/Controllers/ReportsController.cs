@@ -82,7 +82,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>تراز آزمایشی با تجمیع یک تا چهارسطحی و سه برش زمانی.</summary>
     [HttpGet("trial-balance")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetTrialBalance(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to,
@@ -103,7 +103,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>دفتر روزنامه (صفحه‌بندی‌شده).</summary>
     [HttpGet("journal")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetJournal(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to,
@@ -119,7 +119,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>دفتر کل — مانده اول دوره، گردش و مانده پایان دوره هر حساب.</summary>
     [HttpGet("general-ledger")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetGeneralLedger(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to,
@@ -135,7 +135,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>دفتر معین — ردیف‌های تفصیلی حساب‌های قابل ثبت (صفحه‌بندی‌شده).</summary>
     [HttpGet("subsidiary-ledger")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetSubsidiaryLedger(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to,
@@ -151,7 +151,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>کارت حساب — گردش ردیفی با مانده تراکمی.</summary>
     [HttpGet("account-card/{accountId:guid}")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetAccountCard(
         Guid accountId,
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
@@ -167,7 +167,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>گردش حساب — برش تجمیعی یک حساب.</summary>
     [HttpGet("account-turnover/{accountId:guid}")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetAccountTurnover(
         Guid accountId,
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
@@ -186,7 +186,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>ترازنامه — دارایی/بدهی/حقوق مالکانه با نتیجه دوره جاری.</summary>
     [HttpGet("balance-sheet")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetBalanceSheet(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? to, [FromQuery] Guid? branchId,
@@ -200,7 +200,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>صورت سود و زیان بازه.</summary>
     [HttpGet("profit-loss")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetProfitLoss(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to,
@@ -214,7 +214,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>جریان وجوه نقد — روش مستقیم با طبقه‌بندی جریان نقد.</summary>
     [HttpGet("cash-flow")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetCashFlow(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to,
@@ -231,7 +231,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>بدهکاران — مانده و گردش مشتریان روی حساب‌های دریافتنی.</summary>
     [HttpGet("receivables")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetReceivables(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to,
@@ -244,7 +244,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>بستانکاران — مانده و گردش تأمین‌کنندگان روی حساب‌های پرداختنی.</summary>
     [HttpGet("payables")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetPayables(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to,
@@ -257,7 +257,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>گردش اشخاص (بعد شخص روی کل حساب‌ها).</summary>
     [HttpGet("party-turnover")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetPartyTurnover(
         [FromQuery] Guid? fiscalYearId, [FromQuery] Guid? fiscalPeriodId,
         [FromQuery] DateOnly? from, [FromQuery] DateOnly? to,
@@ -270,7 +270,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>گزارش سنی مطالبات — در صورت وجود اطلاعات سررسید معتبر.</summary>
     [HttpGet("aging")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetAging(
         [FromQuery] DateOnly? to, CancellationToken cancellationToken)
     {
@@ -285,7 +285,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>تنظیمات طبقه‌بندی ریشه‌های کدینگ.</summary>
     [HttpGet("classifications")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetClassifications(CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -303,7 +303,7 @@ public class ReportsController : BaseApiController
 
     /// <summary>تنظیمات طبقه‌بندی جریان نقد.</summary>
     [HttpGet("cash-flow-classifications")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> GetCashFlowClassifications(CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -328,7 +328,7 @@ public class ReportsController : BaseApiController
     /// خروجی با API تطابق کامل دارد.
     /// </summary>
     [HttpPost("export")]
-    [HasPermission("accounting:reports:read")]
+    [HasPermission(AccountingPermissions.ViewFinancialReports)]
     public async Task<IActionResult> ExportReport([FromBody] ReportExportApiRequest request, CancellationToken cancellationToken)
     {
         var filter = BuildFilter(request.FiscalYearId, request.FiscalPeriodId, request.From, request.To,

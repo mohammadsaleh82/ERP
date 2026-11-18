@@ -6,6 +6,7 @@ using ERP.Modules.Accounting.Domain.Enums;
 using ERP.Modules.Accounting.Domain.Exceptions;
 using ERP.Modules.Accounting.Domain.Services;
 using ERP.Modules.Accounting.Infrastructure.Persistence;
+using ERP.Modules.Accounting.Application.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 
 namespace ERP.Modules.Accounting.Application.Services;
@@ -34,10 +35,12 @@ public interface IAccountService
 public class AccountService : IAccountService
 {
     private readonly AccountingDbContext _dbContext;
+    private readonly IAccountingAuditTrailService _auditTrail;
 
-    public AccountService(AccountingDbContext dbContext)
+    public AccountService(AccountingDbContext dbContext, IAccountingAuditTrailService auditTrail)
     {
         _dbContext = dbContext;
+        _auditTrail = auditTrail;
     }
 
     public async Task<AccountDto> CreateAccountAsync(
@@ -116,6 +119,13 @@ public class AccountService : IAccountService
         }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            tenantId, companyId, AuditTrailActions.AccountCreated,
+            "Account", account.Id,
+            after: AccountSnapshot(account),
+            branchId: null, cancellationToken: cancellationToken);
+
         return MapToDto(account, hasChildren: false);
     }
 
@@ -144,6 +154,13 @@ public class AccountService : IAccountService
             request.RequireDetailAccount);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            tenantId, companyId, AuditTrailActions.AccountUpdated,
+            "Account", account.Id,
+            after: AccountSnapshot(account),
+            branchId: null, cancellationToken: cancellationToken);
+
         return MapToDto(account, account.SubAccounts.Count > 0);
     }
 
@@ -160,6 +177,12 @@ public class AccountService : IAccountService
 
         account.Deactivate();
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            tenantId, companyId, AuditTrailActions.AccountDeactivated,
+            "Account", account.Id,
+            after: AccountSnapshot(account),
+            branchId: null, cancellationToken: cancellationToken);
     }
 
     public async Task ActivateAccountAsync(Guid tenantId, Guid companyId, Guid accountId, CancellationToken cancellationToken = default)
@@ -561,4 +584,15 @@ public class AccountService : IAccountService
             a.RequireDetailAccount,
             a.CreatedAtUtc,
             a.LastModifiedAtUtc);
+
+    private static Dictionary<string, object?> AccountSnapshot(Account account) => new()
+    {
+        ["fullCode"] = account.FullCode,
+        ["name"] = account.Name,
+        ["nature"] = account.Nature.ToString(),
+        ["isActive"] = account.IsActive,
+        ["allowPosting"] = account.AllowPosting,
+        ["version"] = (long)account.Version
+    };
+
 }

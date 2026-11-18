@@ -491,6 +491,108 @@ namespace ERP.Modules.Accounting.Migrations
                     b.ToTable("acc_account_template_levels", (string)null);
                 });
 
+            modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountingAuditTrail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("action");
+
+                    b.Property<string>("AfterSnapshot")
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)")
+                        .HasColumnName("after_snapshot");
+
+                    b.Property<string>("BeforeSnapshot")
+                        .HasMaxLength(8000)
+                        .HasColumnType("character varying(8000)")
+                        .HasColumnName("before_snapshot");
+
+                    b.Property<Guid?>("BranchId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("branch_id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("correlation_id");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("created_by");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("entity_id");
+
+                    b.Property<string>("EntityType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("entity_type");
+
+                    b.Property<DateTimeOffset?>("LastModifiedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_modified_at_utc");
+
+                    b.Property<string>("LastModifiedBy")
+                        .HasColumnType("text")
+                        .HasColumnName("last_modified_by");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTimeOffset>("TimestampUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("timestamp_utc");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("user_id");
+
+                    b.Property<long>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("bigint")
+                        .HasColumnName("version");
+
+                    b.HasKey("Id")
+                        .HasName("pk_acc_audit_trail");
+
+                    b.HasIndex("TenantId", "CompanyId", "CorrelationId")
+                        .HasDatabaseName("ix_acc_audit_trail_tenant_id_company_id_correlation_id");
+
+                    b.HasIndex("TenantId", "CompanyId", "TimestampUtc")
+                        .HasDatabaseName("ix_acc_audit_trail_tenant_id_company_id_timestamp_utc");
+
+                    b.HasIndex("TenantId", "CompanyId", "Action", "EntityId")
+                        .HasDatabaseName("ix_acc_audit_trail_tenant_id_company_id_action_entity_id");
+
+                    b.ToTable("acc_audit_trail", (string)null);
+                });
+
             modelBuilder.Entity("ERP.Modules.Accounting.Domain.Entities.AccountingDocument", b =>
                 {
                     b.Property<Guid>("Id")
@@ -870,6 +972,14 @@ namespace ERP.Modules.Accounting.Migrations
                     b.Property<DateOnly?>("LockDate")
                         .HasColumnType("date")
                         .HasColumnName("lock_date");
+
+                    b.Property<bool>("RequireSeparateApprover")
+                        .HasColumnType("boolean")
+                        .HasColumnName("require_separate_approver");
+
+                    b.Property<bool>("RequireSeparatePoster")
+                        .HasColumnType("boolean")
+                        .HasColumnName("require_separate_poster");
 
                     b.Property<int>("RoundingMode")
                         .HasColumnType("integer")

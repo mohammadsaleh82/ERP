@@ -22,7 +22,7 @@ public class AccountTemplatesController : BaseApiController
     }
 
     [HttpGet]
-    [HasPermission("accounting:accounts:read")]
+    [HasPermission(AccountingPermissions.ViewAccounts)]
     public async Task<IActionResult> GetTemplates(CancellationToken cancellationToken)
     {
         var result = await _accountService.GetTemplatesAsync(cancellationToken);
@@ -30,7 +30,7 @@ public class AccountTemplatesController : BaseApiController
     }
 
     [HttpGet("{id:guid}")]
-    [HasPermission("accounting:accounts:read")]
+    [HasPermission(AccountingPermissions.ViewAccounts)]
     public async Task<IActionResult> GetTemplateById(Guid id, CancellationToken cancellationToken)
     {
         var result = await _accountService.GetTemplateByIdAsync(id, cancellationToken);

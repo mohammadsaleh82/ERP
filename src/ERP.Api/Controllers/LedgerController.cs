@@ -53,7 +53,7 @@ public class LedgerController : BaseApiController
 
     /// <summary>دفتر روزنامه: اسناد قطعی به ترتیب تاریخ و شماره با جمع روزانه و دوره‌ای.</summary>
     [HttpGet("journal")]
-    [HasPermission("accounting:ledger:read")]
+    [HasPermission(AccountingPermissions.ViewLedger)]
     public async Task<IActionResult> GetJournal([FromQuery] JournalQueryRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -63,7 +63,7 @@ public class LedgerController : BaseApiController
 
     /// <summary>دفتر کل: خلاصه گردش و مانده حساب‌ها (صفحه‌بندی واقعی روی حساب‌ها).</summary>
     [HttpGet("general-ledger")]
-    [HasPermission("accounting:ledger:read")]
+    [HasPermission(AccountingPermissions.ViewLedger)]
     public async Task<IActionResult> GetGeneralLedger([FromQuery] GeneralLedgerQueryRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -73,7 +73,7 @@ public class LedgerController : BaseApiController
 
     /// <summary>گردش تفصیلی یک حساب در دفتر کل.</summary>
     [HttpGet("general-ledger/accounts/{accountId:guid}/transactions")]
-    [HasPermission("accounting:ledger:read")]
+    [HasPermission(AccountingPermissions.ViewLedger)]
     public async Task<IActionResult> GetLedgerTransactions(Guid accountId, [FromQuery] GeneralLedgerQueryRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -83,7 +83,7 @@ public class LedgerController : BaseApiController
 
     /// <summary>دفتر معین: گردش حساب‌های زیرمجموعه یک حساب کل (بدون شمارش دوباره).</summary>
     [HttpGet("subsidiary-ledger")]
-    [HasPermission("accounting:ledger:read")]
+    [HasPermission(AccountingPermissions.ViewLedger)]
     public async Task<IActionResult> GetSubsidiaryLedger([FromQuery] SubsidiaryLedgerQueryRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -93,7 +93,7 @@ public class LedgerController : BaseApiController
 
     /// <summary>موتور مانده: Opening/Debit/Credit/Closing بر اساس منبع اصلی دفتر کل.</summary>
     [HttpGet("balances")]
-    [HasPermission("accounting:ledger:read")]
+    [HasPermission(AccountingPermissions.ViewLedger)]
     public async Task<IActionResult> GetBalances([FromQuery] BalanceQueryRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -103,7 +103,7 @@ public class LedgerController : BaseApiController
 
     /// <summary>مانده سریع از اسنپ‌شات‌های تجمیعی (مسیر خواندن بهینه).</summary>
     [HttpGet("balances/snapshot")]
-    [HasPermission("accounting:ledger:read")]
+    [HasPermission(AccountingPermissions.ViewLedger)]
     public async Task<IActionResult> GetSnapshotBalances([FromQuery] Guid fiscalYearId, [FromQuery] Guid? periodId, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -113,7 +113,7 @@ public class LedgerController : BaseApiController
 
     /// <summary>مطابقت‌سنجی اسنپ‌شات‌ها با تجمیع زنده دفتر کل (Reconciliation).</summary>
     [HttpGet("balances/reconcile")]
-    [HasPermission("accounting:ledger:read")]
+    [HasPermission(AccountingPermissions.ViewLedger)]
     public async Task<IActionResult> ReconcileSnapshots([FromQuery] Guid? fiscalYearId, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -133,7 +133,7 @@ public class LedgerController : BaseApiController
 
     /// <summary>تطبیق‌سنجی اسناد قطعی با گردش‌های دفتر کل (هیچ سند بدون گردش و هیچ گردش یتیم).</summary>
     [HttpGet("consistency")]
-    [HasPermission("accounting:ledger:read")]
+    [HasPermission(AccountingPermissions.ViewLedger)]
     public async Task<IActionResult> VerifyConsistency([FromQuery] Guid? fiscalYearId, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();

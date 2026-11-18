@@ -49,7 +49,7 @@ public class AccountingSettingsController : BaseApiController
     }
 
     [HttpPut]
-    [HasPermission("accounting:settings:update")]
+    [HasPermission(AccountingPermissions.ManageAccountingSettings)]
     public async Task<IActionResult> UpdateSettings([FromBody] UpdateAccountingSettingsRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();

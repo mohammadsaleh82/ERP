@@ -1,5 +1,7 @@
 using ERP.BuildingBlocks.Exceptions;
+using ERP.BuildingBlocks.Security;
 using ERP.Modules.Accounting.Application.Commands;
+using ERP.Modules.Accounting.Application.Services.Audit;
 using ERP.Modules.Accounting.Application.DTOs;
 using ERP.Modules.Accounting.Domain.Entities;
 using ERP.Modules.Accounting.Domain.Enums;
@@ -37,19 +39,25 @@ public class DocumentService : IDocumentService
     private readonly CreateDocumentRequestValidator _createValidator;
     private readonly UpdateDocumentRequestValidator _updateValidator;
     private readonly IDimensionValidationService _dimensionValidation;
+    private readonly IAccountingAuditTrailService _auditTrail;
+    private readonly ICurrentUserContext? _currentUserContext;
 
     public DocumentService(
         AccountingDbContext db,
         IVoucherNumberingService numberingService,
         CreateDocumentRequestValidator createValidator,
         UpdateDocumentRequestValidator updateValidator,
-        IDimensionValidationService dimensionValidation)
+        IDimensionValidationService dimensionValidation,
+        IAccountingAuditTrailService auditTrail,
+        ICurrentUserContext? currentUserContext = null)
     {
         _db = db;
         _numberingService = numberingService;
         _createValidator = createValidator;
         _updateValidator = updateValidator;
         _dimensionValidation = dimensionValidation;
+        _auditTrail = auditTrail;
+        _currentUserContext = currentUserContext;
     }
 
     /// <summary>اعمال ابعاد مالی فرمان روی ردیف پس از تخصیص شناسه سند (نرمال‌سازی ستون‌های قدیمی + ابعاد جدید).</summary>
@@ -159,6 +167,8 @@ public class DocumentService : IDocumentService
             doc.ReferenceDocumentId = command.ReferenceDocumentId;
 
         _db.Documents.Add(doc);
+        // ثبت‌کننده سند = کاربر فرمان (مبنای قاعده تفکیک وظایف تأیید)
+        doc.CreatedBy = command.PerformedBy?.Trim();
 
         // ماده‌سازی اختصاص‌های بعد مالی پس از تخصیص شناسه سند توسط EF
         for (var i = 0; i < command.Lines.Count; i++)
@@ -182,6 +192,12 @@ public class DocumentService : IDocumentService
             $"ایجاد سند پیش‌نویس {doc.DocumentNumber} با {doc.Lines.Count} ردیف"));
 
         await _db.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            command.TenantId, command.CompanyId, AuditTrailActions.VoucherCreated,
+            "AccountingDocument", doc.Id,
+            after: DocumentSnapshot(doc),
+            branchId: doc.BranchId, userId: command.PerformedBy, cancellationToken: cancellationToken);
 
         return MapToDto(doc);
     }
@@ -249,6 +265,13 @@ public class DocumentService : IDocumentService
 
         await _db.SaveChangesAsync(cancellationToken);
 
+        await _auditTrail.RecordAsync(
+            doc.TenantId, doc.CompanyId, AuditTrailActions.VoucherDraftUpdated,
+            "AccountingDocument", doc.Id,
+            before: new Dictionary<string, object?> { ["status"] = previousStatus.ToString(), ["documentNumber"] = doc.DocumentNumber },
+            after: DocumentSnapshot(doc),
+            branchId: doc.BranchId, userId: command.PerformedBy, cancellationToken: cancellationToken);
+
         return MapToDto(doc);
     }
 
@@ -272,7 +295,11 @@ public class DocumentService : IDocumentService
         _db.Documents.Remove(doc);
         _db.DocumentAuditLogs.Add(auditLog);
 
-        await _db.SaveChangesAsync(cancellationToken);
+        await _auditTrail.RecordAsync(
+            doc.TenantId, doc.CompanyId, AuditTrailActions.VoucherDraftDeleted,
+            "AccountingDocument", doc.Id,
+            before: DocumentSnapshot(doc),
+            branchId: doc.BranchId, userId: command.PerformedBy, cancellationToken: cancellationToken);
     }
 
     // ------------------------------------------------------------------
@@ -292,6 +319,14 @@ public class DocumentService : IDocumentService
             command.PerformedBy));
 
         await _db.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            doc.TenantId, doc.CompanyId, AuditTrailActions.VoucherSubmitted,
+            "AccountingDocument", doc.Id,
+            before: new Dictionary<string, object?> { ["status"] = previousStatus.ToString() },
+            after: new Dictionary<string, object?> { ["status"] = doc.Status.ToString(), ["documentNumber"] = doc.DocumentNumber },
+            branchId: doc.BranchId, userId: command.PerformedBy, cancellationToken: cancellationToken);
+
         return MapToDto(doc);
     }
 
@@ -301,6 +336,16 @@ public class DocumentService : IDocumentService
         var previousStatus = doc.Status;
 
         var policy = await LoadApprovalPolicyAsync(doc.TenantId, doc.CompanyId, cancellationToken);
+        var sod = await LoadSodFlagsAsync(doc.TenantId, doc.CompanyId, cancellationToken);
+
+        // تفکیک وظایف: ثبت‌کننده سند نمی‌تواند سند خودش را تأیید کند (در صورت فعال بودن سیاست)
+        if (sod.RequireSeparateApprover &&
+            !string.IsNullOrWhiteSpace(doc.CreatedBy) &&
+            doc.CreatedBy.Equals(command.PerformedBy?.Trim(), StringComparison.OrdinalIgnoreCase))
+        {
+            throw new AccountingDomainException("Accounting.SodCreatorCannotApprove",
+                "به‌دلیل سیاست تفکیک وظایف، ثبت‌کننده سند مجاز به تأیید سند خود نیست.");
+        }
 
         doc.Approve(policy, command.PerformedBy);
 
@@ -312,6 +357,14 @@ public class DocumentService : IDocumentService
             $"تأیید سند {doc.DocumentNumber} بر اساس سیاست {policy}"));
 
         await _db.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            doc.TenantId, doc.CompanyId, AuditTrailActions.VoucherApproved,
+            "AccountingDocument", doc.Id,
+            before: new Dictionary<string, object?> { ["status"] = previousStatus.ToString() },
+            after: new Dictionary<string, object?> { ["status"] = doc.Status.ToString(), ["documentNumber"] = doc.DocumentNumber, ["approvedBy"] = doc.ApprovedBy },
+            branchId: doc.BranchId, userId: command.PerformedBy, cancellationToken: cancellationToken);
+
         return MapToDto(doc);
     }
 
@@ -332,6 +385,15 @@ public class DocumentService : IDocumentService
             $"رد سند {doc.DocumentNumber}: {command.RejectionReason.Trim()}"));
 
         await _db.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            doc.TenantId, doc.CompanyId, AuditTrailActions.VoucherRejected,
+            "AccountingDocument", doc.Id,
+            before: new Dictionary<string, object?> { ["status"] = previousStatus.ToString() },
+            after: new Dictionary<string, object?> { ["status"] = doc.Status.ToString(), ["documentNumber"] = doc.DocumentNumber },
+            reason: command.RejectionReason,
+            branchId: doc.BranchId, userId: command.PerformedBy, cancellationToken: cancellationToken);
+
         return MapToDto(doc);
     }
 
@@ -346,7 +408,12 @@ public class DocumentService : IDocumentService
             .FirstOrDefaultAsync(d => d.Id == documentId, cancellationToken)
             ?? throw new NotFoundException("AccountingDocument", documentId);
 
-        if (doc.CompanyId != companyId)
+        if (doc.TenantId != tenantId || doc.CompanyId != companyId)
+            throw new NotFoundException("AccountingDocument", documentId);
+
+        // تفکیک شعبه: کاربر محدود به شعبه، سند شعبه دیگر را نمی‌بیند (در صورت کاربرد)
+        var activeBranchId = _currentUserContext?.ActiveBranchId;
+        if (activeBranchId.HasValue && doc.BranchId.HasValue && doc.BranchId.Value != activeBranchId.Value)
             throw new NotFoundException("AccountingDocument", documentId);
 
         return await MapToDetailDtoAsync(doc, cancellationToken);
@@ -354,7 +421,9 @@ public class DocumentService : IDocumentService
 
     public async Task<PagedDocumentsResult> SearchDocumentsAsync(Guid tenantId, Guid companyId, SearchDocumentsRequest request, CancellationToken cancellationToken = default)
     {
-        var query = _db.Documents.AsNoTracking().AsQueryable();
+        var query = _db.Documents.AsNoTracking()
+            .Where(d => d.TenantId == tenantId && d.CompanyId == companyId)
+            .AsQueryable();
 
         if (request.Status.HasValue)
             query = query.Where(d => d.Status == request.Status.Value);
@@ -448,6 +517,31 @@ public class DocumentService : IDocumentService
 
         return settings?.ApprovalPolicy ?? DocumentApprovalPolicy.DirectPostingAllowed;
     }
+
+    /// <summary>پرچم‌های تفکیک وظایف شرکت (Settings).</summary>
+    private async Task<(bool RequireSeparateApprover, bool RequireSeparatePoster)> LoadSodFlagsAsync(
+        Guid tenantId, Guid companyId, CancellationToken cancellationToken)
+    {
+        var settings = await _db.AccountingSettings
+            .AsNoTracking()
+            .Where(s => s.TenantId == tenantId && s.CompanyId == companyId)
+            .Select(s => new { s.RequireSeparateApprover, s.RequireSeparatePoster })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return (settings?.RequireSeparateApprover ?? false, settings?.RequireSeparatePoster ?? false);
+    }
+
+    /// <summary>Snapshot سبک سند برای ممیزی (بدون داده حساس).</summary>
+    private static Dictionary<string, object?> DocumentSnapshot(AccountingDocument doc) => new()
+    {
+        ["documentNumber"] = doc.DocumentNumber,
+        ["status"] = doc.Status.ToString(),
+        ["documentDate"] = doc.DocumentDate.ToString("O"),
+        ["totalDebit"] = doc.TotalDebit,
+        ["totalCredit"] = doc.TotalCredit,
+        ["lineCount"] = doc.Lines.Count,
+        ["referenceNumber"] = doc.ReferenceNumber
+    };
 
     private async Task<DocumentDetailDto> MapToDetailDtoAsync(AccountingDocument doc, CancellationToken cancellationToken)
     {

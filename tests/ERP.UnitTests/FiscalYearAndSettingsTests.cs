@@ -1,3 +1,4 @@
+using ERP.Modules.Accounting.Application.Services.Audit;
 using ERP.Modules.Accounting.Application.DTOs;
 using ERP.Modules.Accounting.Application.Services;
 using ERP.Modules.Accounting.Domain.Entities;
@@ -59,7 +60,7 @@ public class FiscalYearAndSettingsTests : IDisposable
     public async Task Scenario02_OverlappingFiscalYears_SameCompany_ShouldThrow()
     {
         using var dbContext = new AccountingDbContext(_options);
-        var service = new FiscalYearService(dbContext, _calendarService);
+        var service = new FiscalYearService(dbContext, _calendarService, new AccountingAuditTrailService(dbContext, new TestClock(), new TestUserContext(), new FixedCorrelationIdProvider()));
 
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
@@ -321,7 +322,7 @@ public class FiscalYearAndSettingsTests : IDisposable
     public async Task Scenario11_SettingsChange_ShouldNotAffectExistingDocuments()
     {
         using var dbContext = new AccountingDbContext(_options);
-        var settingsService = new AccountingSettingsService(dbContext);
+        var settingsService = new AccountingSettingsService(dbContext, new AccountingAuditTrailService(dbContext, new TestClock(), new TestUserContext(), new FixedCorrelationIdProvider()));
 
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();

@@ -1,3 +1,4 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using ERP.BuildingBlocks.Abstractions;
 using ERP.BuildingBlocks.Security;
 using ERP.BuildingBlocks.Tenancy;
@@ -71,6 +72,9 @@ public static class ServiceCollectionExtensions
         services.AddSubscriptionsModule(configuration);
         services.AddAuditModule(configuration);
 
-        return services;
+            services.TryAddSingleton<ERP.BuildingBlocks.Security.ICorrelationIdProvider, ERP.Api.Middleware.HttpCorrelationIdProvider>();
+    services.AddHttpContextAccessor();
+
+return services;
     }
 }

@@ -51,7 +51,7 @@ public class FiscalYearClosingIntegrationTests : IDisposable
         new(_harness.NewDbContext(), _svc.Docs, _svc.Engine);
 
     private FiscalYearReopeningService NewReopeningService() =>
-        new(_harness.NewDbContext());
+        new(_harness.NewDbContext(), _harness.NewAuditTrailService(_harness.NewDbContext()));
 
     private OpeningVoucherService NewOpeningService(IOpeningInventorySource? inventorySource = null) =>
         new(_harness.NewDbContext(), _svc.Docs, _svc.Engine, inventorySource ?? new EmptyOpeningInventorySource());

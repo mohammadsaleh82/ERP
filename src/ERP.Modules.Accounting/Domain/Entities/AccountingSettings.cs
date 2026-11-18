@@ -20,6 +20,12 @@ public class AccountingSettings : Entity, ITenantScoped, ICompanyScoped, IAudita
     public AllowNegativeBalancesPolicy AllowNegativeBalancesPolicy { get; set; } = AllowNegativeBalancesPolicy.WarningOnly;
     public DocumentApprovalPolicy ApprovalPolicy { get; set; } = DocumentApprovalPolicy.DirectPostingAllowed;
 
+    /// <summary>تفکیک وظایف: ثبت‌کننده سند نمی‌تواند سند خودش را تأیید کند.</summary>
+    public bool RequireSeparateApprover { get; set; }
+
+    /// <summary>تفکیک وظایف: تأییدکننده سند نمی‌تواند همان سند را قطعی کند.</summary>
+    public bool RequireSeparatePoster { get; set; }
+
     public Guid? DefaultAccountTemplateId { get; set; }
     public Guid? ActiveFiscalYearId { get; set; }
     public DateOnly? LockDate { get; set; }
@@ -77,7 +83,9 @@ public class AccountingSettings : Entity, ITenantScoped, ICompanyScoped, IAudita
         Guid? defaultAccountTemplateId,
         DateOnly? lockDate,
         bool allowUnbalancedDraft,
-        bool autoNumberingEnabled)
+        bool autoNumberingEnabled,
+        bool requireSeparateApprover = false,
+        bool requireSeparatePoster = false)
     {
         if (string.IsNullOrWhiteSpace(defaultCurrencyCode))
             throw new AccountingDomainException("Accounting.EmptyCurrency", "کد واحد پول پیش‌فرض نمی‌تواند خالی باشد.");
@@ -104,6 +112,8 @@ public class AccountingSettings : Entity, ITenantScoped, ICompanyScoped, IAudita
         LockDate = lockDate;
         AllowUnbalancedDraft = allowUnbalancedDraft;
         AutoNumberingEnabled = autoNumberingEnabled;
+        RequireSeparateApprover = requireSeparateApprover;
+        RequireSeparatePoster = requireSeparatePoster;
         Version++;
     }
 

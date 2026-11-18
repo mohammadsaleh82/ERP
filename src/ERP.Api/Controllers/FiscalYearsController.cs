@@ -40,7 +40,7 @@ public class FiscalYearsController : BaseApiController
     }
 
     [HttpPost]
-    [HasPermission("accounting:fiscal-years:create")]
+    [HasPermission(AccountingPermissions.CreateFiscalYear)]
     public async Task<IActionResult> Create([FromBody] CreateFiscalYearRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();
@@ -122,7 +122,7 @@ public class FiscalYearsController : BaseApiController
     }
 
     [HttpPost("{id:guid}/periods/{periodId:guid}/close")]
-    [HasPermission("accounting:fiscal-years:update")]
+    [HasPermission(AccountingPermissions.CloseFiscalPeriod)]
     public async Task<IActionResult> ClosePeriod(Guid id, Guid periodId, CancellationToken cancellationToken)
     {
         var (tenantId, companyId) = GetRequiredContext();

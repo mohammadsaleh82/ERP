@@ -6,6 +6,7 @@ using ERP.Modules.Accounting.Application.Validators;
 using ERP.Modules.Accounting.Domain.Entities;
 using ERP.Modules.Accounting.Domain.Enums;
 using ERP.Modules.Accounting.Infrastructure.Persistence;
+using ERP.Modules.Accounting.Application.Services.Audit;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
@@ -100,14 +101,20 @@ public sealed class VoucherTestHarness : IDisposable
         var numbering = new VoucherNumberingService(db);
         var snapshots = new BalanceSnapshotService(db);
         var dimensionValidation = new DimensionValidationApplicationService(db);
-        var docs = new DocumentService(db, numbering, new CreateDocumentRequestValidator(), new UpdateDocumentRequestValidator(), dimensionValidation);
-        var engine = new VoucherPostingEngine(db, numbering, snapshots, dimensionValidation, Clock);
+        var auditTrail = NewAuditTrailService(db);
+        var docs = new DocumentService(db, numbering, new CreateDocumentRequestValidator(), new UpdateDocumentRequestValidator(), dimensionValidation, auditTrail, CurrentUser);
+        var engine = new VoucherPostingEngine(db, numbering, snapshots, dimensionValidation, Clock, auditTrail);
         return (docs, engine, db);
     }
+
+    /// <summary>سرویس دفتر ممیزی روی زمینه داده داده‌شده.</summary>
+    public AccountingAuditTrailService NewAuditTrailService(AccountingDbContext db) =>
+        new(db, Clock, CurrentUser, new FixedCorrelationIdProvider());
 
     // ------------------------------------------------------------------
     // Seed helpers
     // ------------------------------------------------------------------
+
 
     public FiscalYear SeedOpenFiscalYear(int startYear = 2025, bool open = true)
     {
@@ -230,4 +237,11 @@ public sealed class VoucherTestHarness : IDisposable
         }
         GC.SuppressFinalize(this);
     }
+}
+
+/// <summary>تامین شناسه همبستگی ثابت برای تست‌ها.</summary>
+public sealed class FixedCorrelationIdProvider : ICorrelationIdProvider
+{
+    public string CorrelationId { get; set; } = "test-correlation";
+    public string GetCorrelationId() => CorrelationId;
 }

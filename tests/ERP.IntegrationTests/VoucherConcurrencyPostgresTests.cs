@@ -1,3 +1,4 @@
+using ERP.Modules.Accounting.Application.Services.Audit;
 using System.Data;
 using ERP.BuildingBlocks.Abstractions;
 using ERP.BuildingBlocks.Security;
@@ -149,8 +150,9 @@ public class VoucherConcurrencyPostgresTests : IAsyncLifetime
             var numbering = new VoucherNumberingService(Db);
             var snapshots = new BalanceSnapshotService(Db);
             var dimensionValidation = new DimensionValidationApplicationService(Db);
-            Docs = new DocumentService(Db, numbering, new CreateDocumentRequestValidator(), new UpdateDocumentRequestValidator(), dimensionValidation);
-            Engine = new VoucherPostingEngine(Db, numbering, snapshots, dimensionValidation, Clock);
+            var auditTrail = new AccountingAuditTrailService(Db, Clock, CurrentUser, new FixedCorrelationIdProvider());
+            Docs = new DocumentService(Db, numbering, new CreateDocumentRequestValidator(), new UpdateDocumentRequestValidator(), dimensionValidation, auditTrail, CurrentUser);
+            Engine = new VoucherPostingEngine(Db, numbering, snapshots, dimensionValidation, Clock, auditTrail);
         }
     }
 

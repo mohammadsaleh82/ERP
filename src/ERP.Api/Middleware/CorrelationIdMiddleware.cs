@@ -1,3 +1,4 @@
+using ERP.BuildingBlocks.Security;
 using Serilog.Context;
 
 namespace ERP.Api.Middleware;
@@ -14,6 +15,7 @@ public sealed class CorrelationIdMiddleware(RequestDelegate next)
                 : Guid.NewGuid().ToString("N");
 
         context.Response.Headers[CorrelationIdHeader] = correlationId;
+        context.Items[HttpCorrelationIdProvider.CorrelationIdItemKey] = correlationId;
 
         using (LogContext.PushProperty("CorrelationId", correlationId))
         {

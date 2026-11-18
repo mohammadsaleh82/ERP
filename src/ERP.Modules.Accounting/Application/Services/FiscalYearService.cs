@@ -5,6 +5,7 @@ using ERP.Modules.Accounting.Domain.Enums;
 using ERP.Modules.Accounting.Domain.Exceptions;
 using ERP.Modules.Accounting.Domain.Services;
 using ERP.Modules.Accounting.Infrastructure.Persistence;
+using ERP.Modules.Accounting.Application.Services.Audit;
 using Microsoft.EntityFrameworkCore;
 
 namespace ERP.Modules.Accounting.Application.Services;
@@ -27,11 +28,13 @@ public class FiscalYearService : IFiscalYearService
 {
     private readonly AccountingDbContext _dbContext;
     private readonly IFinancialCalendarService _calendarService;
+    private readonly IAccountingAuditTrailService _auditTrail;
 
-    public FiscalYearService(AccountingDbContext dbContext, IFinancialCalendarService calendarService)
+    public FiscalYearService(AccountingDbContext dbContext, IFinancialCalendarService calendarService, IAccountingAuditTrailService auditTrail)
     {
         _dbContext = dbContext;
         _calendarService = calendarService;
+        _auditTrail = auditTrail;
     }
 
     public async Task<FiscalYearDetailDto> CreateFiscalYearAsync(
@@ -255,6 +258,11 @@ public class FiscalYearService : IFiscalYearService
 
         period.Close();
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            tenantId, companyId, AuditTrailActions.PeriodClosed,
+            "FiscalPeriod", period.Id,
+            after: new Dictionary<string, object?> { ["periodNumber"] = period.PeriodNumber, ["status"] = period.Status.ToString(), ["endDate"] = period.EndDate.ToString("O") });
     }
 
     public async Task OpenFiscalYearAsync(
@@ -285,6 +293,12 @@ public class FiscalYearService : IFiscalYearService
 
         fiscalYear.Close(closedBy, DateTimeOffset.UtcNow);
         await _dbContext.SaveChangesAsync(cancellationToken);
+
+        await _auditTrail.RecordAsync(
+            tenantId, companyId, AuditTrailActions.FiscalYearClosed,
+            "FiscalYear", fiscalYear.Id,
+            after: new Dictionary<string, object?> { ["name"] = fiscalYear.Name, ["status"] = fiscalYear.Status.ToString() },
+            userId: closedBy);
     }
 
     private static FiscalYearDetailDto MapToDetailDto(FiscalYear fy) =>

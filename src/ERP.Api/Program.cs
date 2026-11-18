@@ -2,6 +2,7 @@ using ERP.Api.Authentication;
 using ERP.Api.Extensions;
 using ERP.Api.Middleware;
 using ERP.Api.OpenApi;
+using System.Threading.RateLimiting;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -21,6 +22,21 @@ try
         .WriteTo.Console(formatProvider: System.Globalization.CultureInfo.InvariantCulture));
 
     builder.Services.AddControllers();
+
+    // محدودسازی نرخ درخواست سراسری (امنیت عملیاتی): پنجره ثابت ۱۰۰ درخواست در ۱۰ ثانیه
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+                _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 100,
+                    Window = TimeSpan.FromSeconds(10),
+                    QueueLimit = 0
+                }));
+    });
     builder.Services.AddSwaggerDocumentation();
     builder.Services.AddJwtAuthentication(builder.Configuration);
     builder.Services.AddSharedInfrastructure(builder.Configuration);
@@ -29,6 +45,8 @@ try
 
     app.UseMiddleware<CorrelationIdMiddleware>();
     app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
+    app.UseMiddleware<SecurityHeadersMiddleware>();
+    app.UseRateLimiter();
 
     if (app.Environment.IsDevelopment())
     {

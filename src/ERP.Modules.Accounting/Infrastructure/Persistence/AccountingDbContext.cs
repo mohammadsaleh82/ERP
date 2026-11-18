@@ -36,6 +36,7 @@ public class AccountingDbContext : BaseDbContext
     public DbSet<FiscalYearClosingStep> FiscalYearClosingSteps => Set<FiscalYearClosingStep>();
     public DbSet<FiscalYearReopening> FiscalYearReopenings => Set<FiscalYearReopening>();
     public DbSet<ReportingClassification> ReportingClassifications => Set<ReportingClassification>();
+    public DbSet<AccountingAuditTrail> AccountingAuditTrails => Set<AccountingAuditTrail>();
     public DbSet<CashFlowClassification> CashFlowClassifications => Set<CashFlowClassification>();
 
     public AccountingDbContext(

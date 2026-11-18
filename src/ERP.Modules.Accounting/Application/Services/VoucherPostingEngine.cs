@@ -1,6 +1,7 @@
 using ERP.BuildingBlocks.Abstractions;
 using ERP.BuildingBlocks.Exceptions;
 using ERP.Modules.Accounting.Application.Commands;
+using ERP.Modules.Accounting.Application.Services.Audit;
 using ERP.Modules.Accounting.Application.DTOs;
 using ERP.Modules.Accounting.Application.Services;
 using ERP.Modules.Accounting.Domain.Entities;
@@ -36,19 +37,22 @@ public class VoucherPostingEngine : IVoucherPostingEngine
     private readonly IBalanceSnapshotService _balanceSnapshotService;
     private readonly IDimensionValidationService _dimensionValidation;
     private readonly IClock _clock;
+    private readonly IAccountingAuditTrailService _auditTrail;
 
     public VoucherPostingEngine(
         AccountingDbContext db,
         IVoucherNumberingService numberingService,
         IBalanceSnapshotService balanceSnapshotService,
         IDimensionValidationService dimensionValidation,
-        IClock clock)
+        IClock clock,
+        IAccountingAuditTrailService auditTrail)
     {
         _db = db;
         _numberingService = numberingService;
         _balanceSnapshotService = balanceSnapshotService;
         _dimensionValidation = dimensionValidation;
         _clock = clock;
+        _auditTrail = auditTrail;
     }
 
     public async Task<PostDocumentResultDto> PostAsync(PostVoucherCommand command, CancellationToken cancellationToken = default)
@@ -107,6 +111,16 @@ public class VoucherPostingEngine : IVoucherPostingEngine
             var policy = await LoadApprovalPolicyAsync(doc.TenantId, doc.CompanyId, cancellationToken);
             AccountingDocumentWorkflow.EnsureCanPost(doc.Status, policy);
 
+            // ۵-الف. تفکیک وظایف: تأییدکننده سند نمی‌تواند همان سند را قطعی کند (در صورت فعال بودن سیاست)
+            var sod = await LoadSodFlagsAsync(doc.TenantId, doc.CompanyId, cancellationToken);
+            if (sod.RequireSeparatePoster &&
+                !string.IsNullOrWhiteSpace(doc.ApprovedBy) &&
+                doc.ApprovedBy.Equals(command.PerformedBy?.Trim(), StringComparison.OrdinalIgnoreCase))
+            {
+                throw new AccountingDomainException("Accounting.SodApproverCannotPost",
+                    "به‌دلیل سیاست تفکیک وظایف، تأییدکننده سند مجاز به قطعی‌سازی همان سند نیست.");
+            }
+
             // ۶. اعتبارسنجی حساب‌های تمام ردیف‌ها (فعال بودن، مجوز ثبت، تعلق به همان شرکت)
             await ValidateDocumentAccountsAsync(doc, cancellationToken);
 
@@ -156,6 +170,21 @@ public class VoucherPostingEngine : IVoucherPostingEngine
 
             await _db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
+
+            // ممیزی عمومی پس از Commit موفق (تراکنش مستقل دفتر ممیزی)
+            await _auditTrail.RecordAsync(
+                doc.TenantId, doc.CompanyId, AuditTrailActions.VoucherPosted,
+                "AccountingDocument", doc.Id,
+                before: new Dictionary<string, object?> { ["status"] = DocumentStatus.Draft.ToString() },
+                after: new Dictionary<string, object?>
+                {
+                    ["status"] = doc.Status.ToString(),
+                    ["documentNumber"] = doc.DocumentNumber,
+                    ["totalDebit"] = doc.TotalDebit,
+                    ["totalCredit"] = doc.TotalCredit,
+                    ["lineCount"] = doc.Lines.Count
+                },
+                branchId: doc.BranchId, userId: command.PerformedBy, cancellationToken: cancellationToken);
 
             return new PostDocumentResultDto(
                 doc.Id, doc.DocumentNumber, doc.TotalDebit, doc.TotalCredit,
@@ -316,6 +345,19 @@ public class VoucherPostingEngine : IVoucherPostingEngine
             await _db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
 
+            await _auditTrail.RecordAsync(
+                original.TenantId, original.CompanyId, AuditTrailActions.VoucherReversed,
+                "AccountingDocument", original.Id,
+                before: new Dictionary<string, object?> { ["status"] = DocumentStatus.Posted.ToString(), ["documentNumber"] = original.DocumentNumber },
+                after: new Dictionary<string, object?>
+                {
+                    ["status"] = DocumentStatus.Reversed.ToString(),
+                    ["reversalDocumentId"] = reversal.Id,
+                    ["reversalDocumentNumber"] = reversal.DocumentNumber
+                },
+                reason: command.Description,
+                branchId: original.BranchId, userId: command.PerformedBy, cancellationToken: cancellationToken);
+
             return new ReverseDocumentResultDto(
                 original.Id, reversal.Id, reversal.DocumentNumber,
                 reversal.TotalDebit, WasAlreadyReversed: false);
@@ -467,6 +509,20 @@ public class VoucherPostingEngine : IVoucherPostingEngine
         await _dimensionValidation.ValidateDocumentLinesAsync(
             doc.TenantId, doc.CompanyId, inputs, cancellationToken);
     }
+
+    /// <summary>پرچم‌های تفکیک وظایف شرکت.</summary>
+    private async Task<(bool RequireSeparateApprover, bool RequireSeparatePoster)> LoadSodFlagsAsync(
+        Guid tenantId, Guid companyId, CancellationToken cancellationToken)
+    {
+        var settings = await _db.AccountingSettings
+            .AsNoTracking()
+            .Where(x => x.TenantId == tenantId && x.CompanyId == companyId)
+            .Select(x => new { x.RequireSeparateApprover, x.RequireSeparatePoster })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        return (settings?.RequireSeparateApprover ?? false, settings?.RequireSeparatePoster ?? false);
+    }
+
 }
 
 /// <summary>نوع‌های استاندارد سریال شماره‌گذاری اسناد.</summary>
@@ -474,4 +530,6 @@ public static class VoucherSequenceTypes
 {
     public const string Voucher = "Voucher";
     public const string Reversal = "Reversal";
+
 }
+

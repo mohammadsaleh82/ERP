@@ -47,7 +47,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>ایجاد سند پیش‌نویس.</summary>
     [HttpPost]
-    [HasPermission("accounting:documents:create")]
+    [HasPermission(AccountingPermissions.CreateVouchers)]
     public async Task<IActionResult> CreateDraft([FromBody] CreateDocumentRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, performedBy) = GetRequiredContext();
@@ -75,7 +75,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>ویرایش سند پیش‌نویس (اسناد قطعی قابل ویرایش مستقیم نیستند).</summary>
     [HttpPut("{id:guid}")]
-    [HasPermission("accounting:documents:update")]
+    [HasPermission(AccountingPermissions.UpdateDraftVouchers)]
     public async Task<IActionResult> UpdateDraft(Guid id, [FromBody] UpdateDocumentRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, performedBy) = GetRequiredContext();
@@ -96,7 +96,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>حذف سند پیش‌نویس (اسناد قطعی حذف فیزیکی نمی‌شوند).</summary>
     [HttpDelete("{id:guid}")]
-    [HasPermission("accounting:documents:delete")]
+    [HasPermission(AccountingPermissions.DeleteDraftVouchers)]
     public async Task<IActionResult> DeleteDraft(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, performedBy) = GetRequiredContext();
@@ -106,7 +106,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>دریافت سند با جزئیات کامل ردیف‌ها.</summary>
     [HttpGet("{id:guid}")]
-    [HasPermission("accounting:documents:read")]
+    [HasPermission(AccountingPermissions.ViewVouchers)]
     public async Task<IActionResult> GetDocument(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -116,7 +116,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>جستجو و صفحه‌بندی اسناد حسابداری.</summary>
     [HttpGet]
-    [HasPermission("accounting:documents:read")]
+    [HasPermission(AccountingPermissions.ViewVouchers)]
     public async Task<IActionResult> SearchDocuments([FromQuery] SearchDocumentsRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -126,7 +126,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>سابقه ممیزی کامل چرخه عمر سند.</summary>
     [HttpGet("{id:guid}/audit-trail")]
-    [HasPermission("accounting:documents:read")]
+    [HasPermission(AccountingPermissions.ViewVouchers)]
     public async Task<IActionResult> GetAuditTrail(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, _) = GetRequiredContext();
@@ -136,7 +136,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>ارسال سند به جریان تأیید (Submit For Approval).</summary>
     [HttpPost("{id:guid}/submit")]
-    [HasPermission("accounting:documents:submit")]
+    [HasPermission(AccountingPermissions.SubmitVouchers)]
     public async Task<IActionResult> SubmitForApproval(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, performedBy) = GetRequiredContext();
@@ -147,7 +147,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>تأیید سند (بر اساس سیاست تأیید شرکت).</summary>
     [HttpPost("{id:guid}/approve")]
-    [HasPermission("accounting:documents:approve")]
+    [HasPermission(AccountingPermissions.ApproveVouchers)]
     public async Task<IActionResult> Approve(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, performedBy) = GetRequiredContext();
@@ -158,7 +158,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>رد سند و بازگشت آن به پیش‌نویس با ثبت دلیل.</summary>
     [HttpPost("{id:guid}/reject")]
-    [HasPermission("accounting:documents:reject")]
+    [HasPermission(AccountingPermissions.RejectVouchers)]
     public async Task<IActionResult> Reject(Guid id, [FromBody] RejectDocumentRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, performedBy) = GetRequiredContext();
@@ -171,7 +171,7 @@ public class DocumentsController : BaseApiController
     /// ثبت قطعی اتمیک سند (Posting). با ارائه هدر Idempotency-Key، درخواست تکراری همان نتیجه عملیات نخست را بازمی‌گرداند.
     /// </summary>
     [HttpPost("{id:guid}/post")]
-    [HasPermission("accounting:documents:post")]
+    [HasPermission(AccountingPermissions.PostVouchers)]
     public async Task<IActionResult> Post(Guid id, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, performedBy) = GetRequiredContext();
@@ -189,7 +189,7 @@ public class DocumentsController : BaseApiController
 
     /// <summary>معکوس‌سازی سند قطعی (Storno) با ایجاد سند معکوس.</summary>
     [HttpPost("{id:guid}/reverse")]
-    [HasPermission("accounting:documents:reverse")]
+    [HasPermission(AccountingPermissions.ReverseVouchers)]
     public async Task<IActionResult> Reverse(Guid id, [FromBody] ReverseDocumentRequest request, CancellationToken cancellationToken)
     {
         var (tenantId, companyId, performedBy) = GetRequiredContext();

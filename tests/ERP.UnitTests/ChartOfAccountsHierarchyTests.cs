@@ -1,3 +1,4 @@
+using ERP.Modules.Accounting.Application.Services.Audit;
 using ERP.Modules.Accounting.Application.DTOs;
 using ERP.Modules.Accounting.Application.Services;
 using ERP.Modules.Accounting.Domain.Entities;
@@ -33,7 +34,7 @@ public class ChartOfAccountsHierarchyTests : IDisposable
     public async Task Scenario01_CreateValidHierarchyTree_ShouldSucceed()
     {
         using var dbContext = new AccountingDbContext(_options);
-        var service = new AccountService(dbContext);
+        var service = new AccountService(dbContext, new AccountingAuditTrailService(dbContext, new TestClock(), new TestUserContext(), new FixedCorrelationIdProvider()));
 
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
@@ -83,7 +84,7 @@ public class ChartOfAccountsHierarchyTests : IDisposable
     public async Task Scenario02_CreateWithInvalidParent_ShouldThrowException()
     {
         using var dbContext = new AccountingDbContext(_options);
-        var service = new AccountService(dbContext);
+        var service = new AccountService(dbContext, new AccountingAuditTrailService(dbContext, new TestClock(), new TestUserContext(), new FixedCorrelationIdProvider()));
 
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
@@ -117,7 +118,7 @@ public class ChartOfAccountsHierarchyTests : IDisposable
     public async Task Scenario04_DuplicateCodeInSameCompany_ShouldThrowException()
     {
         using var dbContext = new AccountingDbContext(_options);
-        var service = new AccountService(dbContext);
+        var service = new AccountService(dbContext, new AccountingAuditTrailService(dbContext, new TestClock(), new TestUserContext(), new FixedCorrelationIdProvider()));
 
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
@@ -171,7 +172,7 @@ public class ChartOfAccountsHierarchyTests : IDisposable
     public async Task Scenario07_DeleteAccountWithFinancialActivity_ShouldBeBlocked()
     {
         using var dbContext = new AccountingDbContext(_options);
-        var service = new AccountService(dbContext);
+        var service = new AccountService(dbContext, new AccountingAuditTrailService(dbContext, new TestClock(), new TestUserContext(), new FixedCorrelationIdProvider()));
 
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
@@ -241,7 +242,7 @@ public class ChartOfAccountsHierarchyTests : IDisposable
     public async Task Scenario10_SearchAccountTreeAndBreadcrumbs_ShouldReturnOrderedHierarchy()
     {
         using var dbContext = new AccountingDbContext(_options);
-        var service = new AccountService(dbContext);
+        var service = new AccountService(dbContext, new AccountingAuditTrailService(dbContext, new TestClock(), new TestUserContext(), new FixedCorrelationIdProvider()));
 
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
@@ -270,7 +271,7 @@ public class ChartOfAccountsHierarchyTests : IDisposable
     public async Task Scenario11_SeedTemplateToNewCompany_ShouldGenerateFullTreeWithoutAffectingExistingCompany()
     {
         using var dbContext = new AccountingDbContext(_options);
-        var service = new AccountService(dbContext);
+        var service = new AccountService(dbContext, new AccountingAuditTrailService(dbContext, new TestClock(), new TestUserContext(), new FixedCorrelationIdProvider()));
 
         var tenantId = Guid.NewGuid();
         var company1Id = Guid.NewGuid();

@@ -98,3 +98,7 @@ dotnet test tests/ERP.IntegrationTests/ --filter "FullyQualifiedName~VoucherConc
 - `tests/ERP.IntegrationTests/FiscalYearClosingIntegrationTests.cs` — ۱۵ سناریوی افتتاحیه/اصلاح/معکوس/اختتامیه/بازگشایی
 - `tests/ERP.IntegrationTests/FinancialBalancePropertyTests.cs` — ناورداهای حفظ تراز در چرخه کامل روی ۲۰ seed تصادفی
 - `tests/ERP.IntegrationTests/FinancialReportsIntegrationTests.cs` — ۱۴ سناریوی گزارش مالی و تطابق خروجی‌ها با API
+- `tests/ERP.IntegrationTests/PermissionMatrixTests.cs`، `SegregationOfDutyTests.cs`، `AuditTrailTests.cs`، `AccountingTenantSecurityTests.cs` — ماتریس مجوزها، تفکیک وظایف، دفتر ممیزی، امنیت Tenant/Branch
+- `tests/ERP.IntegrationTests/AccountingConcurrencyPostgresTests.cs` + `RowLevelSecurityPostgresTests.cs` — هم‌زمانی و RLS روی PostgreSQL واقعی (در نبود سرور Skip)
+- `tests/ERP.IntegrationTests/SecurityHardeningEndpointTests.cs` — هدرهای امنیتی، Rate Limiting و Sanitization روی WAF
+- `tests/ERP.IntegrationTests/FinancialPerformanceBenchmarks.cs` — بنچمارک ۱٫۱ میلیون ردیف
