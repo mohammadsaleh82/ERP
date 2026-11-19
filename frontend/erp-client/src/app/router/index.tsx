@@ -19,6 +19,18 @@ import { AccountingSettingsPage } from '@/features/accounting/pages/accounting-s
 import { VouchersPage } from '@/features/documents';
 import { VoucherFormPage } from '@/features/documents/pages/voucher-form-page';
 import { VoucherDetailPage } from '@/features/documents/pages/voucher-detail-page';
+import {
+  JournalPage,
+  GeneralLedgerPage,
+  LedgerTransactionsPage,
+  SubsidiaryLedgerPage,
+  AccountTurnoverPage,
+  AccountCardPage,
+  AccountBalancesPage,
+  TrialBalancePage,
+  DimensionsTurnoverPage,
+  CombinedDimensionsPage,
+} from '@/features/reports';
 import { TreasuryPage } from '@/features/treasury';
 import { InventoryPage } from '@/features/inventory';
 import { SalesPage } from '@/features/sales';
@@ -103,6 +115,46 @@ export const router = createBrowserRouter([
                     <VoucherDetailPage />
                   </PermissionGuard>
                 ),
+              },
+              {
+                path: '/accounting/reports/journal',
+                element: <JournalPage />,
+              },
+              {
+                path: '/accounting/reports/general-ledger',
+                element: <GeneralLedgerPage />,
+              },
+              {
+                path: '/accounting/reports/general-ledger/:accountId',
+                element: <LedgerTransactionsPage />,
+              },
+              {
+                path: '/accounting/reports/subsidiary',
+                element: <SubsidiaryLedgerPage />,
+              },
+              {
+                path: '/accounting/reports/turnover',
+                element: <AccountTurnoverPage />,
+              },
+              {
+                path: '/accounting/reports/account-card',
+                element: <AccountCardPage />,
+              },
+              {
+                path: '/accounting/reports/balances',
+                element: <AccountBalancesPage />,
+              },
+              {
+                path: '/accounting/reports/trial-balance',
+                element: <TrialBalancePage />,
+              },
+              {
+                path: '/accounting/reports/dimensions',
+                element: <DimensionsTurnoverPage />,
+              },
+              {
+                path: '/accounting/reports/dimensions/combined',
+                element: <CombinedDimensionsPage />,
               },
               {
                 path: '/accounting/accounts',
