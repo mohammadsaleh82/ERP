@@ -11,6 +11,7 @@ interface DatePickerJalaliProps {
   error?: string;
   disabled?: boolean;
   className?: string;
+  'aria-label'?: string;
 }
 
 export const DatePickerJalali: React.FC<DatePickerJalaliProps> = ({
@@ -20,6 +21,7 @@ export const DatePickerJalali: React.FC<DatePickerJalaliProps> = ({
   error,
   disabled = false,
   className,
+  'aria-label': ariaLabel,
 }) => {
   const displayValue = value ? formatToPersianDate(value) : '';
 
@@ -33,6 +35,7 @@ export const DatePickerJalali: React.FC<DatePickerJalaliProps> = ({
       {label && <label className="text-sm font-medium text-foreground">{label}</label>}
       <div className="relative">
         <Input
+        aria-label={ariaLabel}
           type="text"
           readOnly
           value={displayValue}

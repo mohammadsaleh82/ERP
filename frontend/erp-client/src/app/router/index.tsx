@@ -20,6 +20,7 @@ import { PayrollPage } from '@/features/payroll';
 import { ReportingPage } from '@/features/reporting';
 import { OrganizationPage } from '@/features/organization';
 import { SettingsPage } from '@/features/settings';
+import { DesignSystemShowcasePage } from '@/features/design-system/pages/design-system-showcase-page';
 
 export const router = createBrowserRouter([
   // Public Auth Routes
@@ -105,6 +106,10 @@ export const router = createBrowserRouter([
               {
                 path: '/settings',
                 element: <SettingsPage />,
+              },
+              {
+                path: '/design-system',
+                element: <DesignSystemShowcasePage />,
               },
             ],
           },

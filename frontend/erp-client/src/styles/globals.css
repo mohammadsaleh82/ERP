@@ -39,3 +39,42 @@
     color: var(--foreground);
   }
 }
+
+/* ── Design System utilities (Phase 2) ────────────────────────────── */
+
+@theme {
+  --color-debit: var(--debit);
+  --color-credit: var(--credit);
+  --color-primary-soft: var(--primary-soft);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --font-code: var(--font-code);
+}
+
+/* اعداد انگلیسی با عرض ثابت برای ستون‌های مالی */
+.num-en {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* کدهای حسابداری/شناسه‌ها — LTR داخل متن RTL */
+.font-code {
+  font-family: var(--font-code);
+  direction: ltr;
+  unicode-bidi: isolate;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+/* متن‌های ترکیبی فارسی/انگلیسی بدون به‌هم‌ریختگی */
+.bidi-safe {
+  unicode-bidi: plaintext;
+}
+
+/* اسکرول‌بار باریک برای مناطق پرترافیک */
+.thin-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.thin-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 9999px; }

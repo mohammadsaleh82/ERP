@@ -69,3 +69,59 @@
   --info: oklch(0.65 0.15 230);
   --info-foreground: oklch(0.1 0 0);
 }
+
+/* ── Extended Design Tokens (Phase 2 — Design System) ─────────────── */
+
+:root {
+  /* Elevation — سایه‌های کنترل‌شده، بدون blur افراطی */
+  --shadow-xs: 0 1px 2px oklch(0.18 0.02 250 / 0.06);
+  --shadow-sm: 0 1px 3px oklch(0.18 0.02 250 / 0.08), 0 1px 2px oklch(0.18 0.02 250 / 0.05);
+  --shadow-md: 0 4px 10px oklch(0.18 0.02 250 / 0.09);
+  --shadow-lg: 0 10px 24px oklch(0.18 0.02 250 / 0.12);
+
+  /* Primary soft — پس‌زمینه ملایم برند (Selected/Active backgrounds) */
+  --primary-soft: oklch(0.38 0.14 255 / 0.10);
+
+  /* Semantic monetary colors — بدهکار / بستانکار / مانده صفر */
+  --debit: oklch(0.52 0.19 27);          /* قرمز مالی — بدهکار */
+  --debit-soft: oklch(0.52 0.19 27 / 0.10);
+  --credit: oklch(0.58 0.16 145);        /* سبز مالی — بستانکار */
+  --credit-soft: oklch(0.58 0.16 145 / 0.10);
+  --neutral-balance: oklch(0.48 0.02 250);
+
+  /* Financial document status */
+  --status-draft: oklch(0.48 0.02 250);
+  --status-pending: oklch(0.75 0.16 75);
+  --status-posted: oklch(0.58 0.16 145);
+  --status-reversed: oklch(0.6 0.15 230);
+  --status-closed: oklch(0.38 0.14 255);
+
+  /* Monospace for accounting codes & identifiers (LTR-friendly) */
+  --font-code: 'Vazirmatn', ui-monospace, 'Cascadia Mono', monospace;
+
+  /* Border strength scale */
+  --border-strong: oklch(0.78 0.02 250);
+
+  /* Motion — محدود و فقط کاربردی */
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+}
+
+.dark {
+  --shadow-xs: 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.5);
+  --shadow-md: 0 4px 10px oklch(0 0 0 / 0.5);
+  --shadow-lg: 0 10px 24px oklch(0 0 0 / 0.6);
+  --primary-soft: oklch(0.6 0.16 255 / 0.16);
+  --debit: oklch(0.68 0.19 27);
+  --debit-soft: oklch(0.68 0.19 27 / 0.14);
+  --credit: oklch(0.70 0.16 145);
+  --credit-soft: oklch(0.70 0.16 145 / 0.14);
+  --neutral-balance: oklch(0.65 0.02 250);
+  --status-draft: oklch(0.65 0.02 250);
+  --status-pending: oklch(0.78 0.16 75);
+  --status-posted: oklch(0.70 0.16 145);
+  --status-reversed: oklch(0.65 0.15 230);
+  --status-closed: oklch(0.60 0.16 255);
+  --border-strong: oklch(0.34 0.02 250);
+}
