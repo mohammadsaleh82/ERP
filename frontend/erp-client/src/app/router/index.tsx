@@ -3,6 +3,8 @@ import { AppLayout } from '@/app/layouts/app-layout';
 import { AuthLayout } from '@/app/layouts/auth-layout';
 import { AuthGuard } from '@/app/guards/auth-guard';
 import { CompanyGuard } from '@/app/guards/company-guard';
+import { PermissionGuard } from '@/app/guards/permission-guard';
+import { PERMISSIONS } from '@/core/auth/permissions';
 
 import { LoginPage } from '@/features/identity/pages/login-page';
 import { NotFoundPage } from '@/features/identity/pages/not-found-page';
@@ -20,6 +22,7 @@ import { PayrollPage } from '@/features/payroll';
 import { ReportingPage } from '@/features/reporting';
 import { OrganizationPage } from '@/features/organization';
 import { SettingsPage } from '@/features/settings';
+import { ProfilePage } from '@/features/settings/pages/profile-page';
 import { DesignSystemShowcasePage } from '@/features/design-system/pages/design-system-showcase-page';
 
 export const router = createBrowserRouter([
@@ -65,7 +68,11 @@ export const router = createBrowserRouter([
               },
               {
                 path: '/accounting',
-                element: <AccountingPage />,
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.documentsRead, PERMISSIONS.accountsRead]}>
+                    <AccountingPage />
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/treasury',
@@ -93,7 +100,11 @@ export const router = createBrowserRouter([
               },
               {
                 path: '/reporting',
-                element: <ReportingPage />,
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    <ReportingPage />
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/organization',
@@ -106,6 +117,10 @@ export const router = createBrowserRouter([
               {
                 path: '/settings',
                 element: <SettingsPage />,
+              },
+              {
+                path: '/profile',
+                element: <ProfilePage />,
               },
               {
                 path: '/design-system',

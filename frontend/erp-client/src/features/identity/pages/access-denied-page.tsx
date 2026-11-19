@@ -1,22 +1,39 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ShieldAlert, ArrowRight } from 'lucide-react';
+import * as React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ArrowRight, ShieldX } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 
+interface AccessDeniedState {
+  from?: string;
+  permissions?: string[];
+}
+
+/** صفحه 403 — با نمایش مجوزهای لازم و مسیر بازگشت امن */
 export const AccessDeniedPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = (location.state as AccessDeniedState | null) ?? {};
 
   return (
-    <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-6 space-y-4">
-      <div className="w-16 h-16 rounded-full bg-danger/10 flex items-center justify-center text-danger">
-        <ShieldAlert className="w-8 h-8" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 rounded-xl border bg-surface p-8 text-center shadow-sm">
+      <div className="flex size-14 items-center justify-center rounded-full bg-danger/10">
+        <ShieldX className="size-8 text-danger" aria-hidden />
       </div>
-      <h1 className="text-3xl font-bold tracking-tight text-foreground">دسترسی مسدود است (403)</h1>
-      <p className="text-sm text-muted-foreground max-w-md">
-        شما مجوز لازم برای مشاهده این بخش یا انجام عملیات در شرکت جاری را ندارید. در صورت نیاز با مدیر ارشد سیستم تماس بگیرید.
+      <h1 className="text-lg font-bold text-foreground">دسترسی غیرمجاز</h1>
+      <p className="max-w-md text-sm leading-6 text-muted-foreground">
+        {state.from
+          ? `برای مشاهده «${state.from}» یکی از مجوزهای زیر لازم است:`
+          : 'شما مجوز مشاهده این بخش را ندارید. با مدیر سیستم تماس بگیرید.'}
       </p>
-      <Button variant="outline" onClick={() => navigate('/')} className="mt-2">
-        <ArrowRight className="w-4 h-4 me-2" />
+      {state.permissions && state.permissions.length > 0 && (
+        <ul className="max-w-md space-y-1 rounded-md border bg-muted/40 p-3 text-start">
+          {state.permissions.map((permission) => (
+            <li key={permission} dir="ltr" className="font-code text-xs text-muted-foreground">{permission}</li>
+          ))}
+        </ul>
+      )}
+      <Button variant="outline" onClick={() => navigate('/', { replace: true })}>
+        <ArrowRight className="size-4" aria-hidden />
         بازگشت به داشبورد
       </Button>
     </div>

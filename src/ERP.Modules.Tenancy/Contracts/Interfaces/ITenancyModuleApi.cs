@@ -1,6 +1,19 @@
-﻿namespace ERP.Modules.Tenancy.Contracts.Interfaces;
+namespace ERP.Modules.Tenancy.Contracts.Interfaces;
 
+/// <summary>شرکت‌های یک کاربر بر اساس memberships فعال — منبع واقعی انتخاب شرکت در UI.</summary>
 public interface ITenancyModuleApi
 {
-    // Module contract entry points will be defined in subsequent phases
+    Task<IReadOnlyList<UserTenantDto>> GetUserCompaniesAsync(Guid userId, CancellationToken cancellationToken = default);
 }
+
+public sealed record UserTenantDto(
+    Guid TenantId,
+    string TenantName,
+    IReadOnlyList<UserCompanyDto> Companies);
+
+public sealed record UserCompanyDto(
+    Guid CompanyId,
+    string Name,
+    int ActiveFiscalYear,
+    bool IsActive,
+    bool MembershipActive);

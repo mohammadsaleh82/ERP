@@ -28,6 +28,7 @@ public static class DependencyInjection
         });
 
         services.AddScoped<ITenancyMembershipValidator, TenancyMembershipValidator>();
+        services.AddScoped<ITenancyModuleApi, TenancyModuleApi>();
 
         return services;
     }

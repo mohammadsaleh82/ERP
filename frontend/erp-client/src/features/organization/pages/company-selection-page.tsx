@@ -1,98 +1,162 @@
-import React from 'react';
+import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building2, ChevronLeft, CheckCircle2 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { Building2, Check, RefreshCw } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
-import { useCompanyStore, CompanySummary, TenantSummary } from '@/core/company/company.store';
+import { Skeleton } from '@/shared/components/ui/skeleton';
+import { ErrorState } from '@/shared/components/feedback/error-state';
+import { useAuthStore } from '@/core/auth/auth.store';
+import { useCompanyStore } from '@/core/company/company.store';
+import { getUserCompanies, refreshSession, type UserTenantDto } from '@/core/auth/auth.service';
+import { queryClient } from '@/app/providers/query-provider';
 import { toast } from '@/core/notifications/toast';
+import { cn } from '@/shared/utils/cn';
+import { digitsToPersian } from '@/shared/utils/number';
 
-const mockTenants: TenantSummary[] = [
-  {
-    id: 't-1',
-    name: 'هلدینگ سرمایه‌گذاری پیشگامان',
-    companies: [
-      { id: 'c-101', name: 'شرکت تجارت الکترونیک آیریک (دفاتر باز)', fiscalYear: 1403 },
-      { id: 'c-102', name: 'صنایع تولیدی بهین‌کالا (کارخانه مرکزی)', fiscalYear: 1403 },
-    ],
-  },
-  {
-    id: 't-2',
-    name: 'گروه بازرگانی سپهر',
-    companies: [
-      { id: 'c-201', name: 'بازرگانی بین‌المللی سپهر', fiscalYear: 1403 },
-    ],
-  },
-];
-
+/**
+ * انتخاب شرکت واقعی از memberships (GET /Auth/companies).
+ * انتخاب → refresh با هدرهای زمینه → access token + permissions شرکت جدید.
+ */
 export const CompanySelectionPage: React.FC = () => {
   const navigate = useNavigate();
-  const { activeCompany, setActiveTenant, setActiveCompany } = useCompanyStore();
+  const setTenants = useCompanyStore((state) => state.setTenants);
+  const tenants = useCompanyStore((state) => state.tenants);
+  const setCompanyContext = useCompanyStore((state) => state.setCompanyContext);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const [dtos, setDtos] = React.useState<UserTenantDto[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(false);
+  const [switching, setSwitching] = React.useState<string | null>(null);
 
-  const handleSelect = (tenant: TenantSummary, company: CompanySummary) => {
-    setActiveTenant(tenant);
-    setActiveCompany(company);
-    toast.success('شرکت فعال تغییر یافت', `اکنون در حال مدیریت دفاتر «${company.name}» هستید.`);
-    navigate('/');
+  const load = React.useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
+    try {
+      const companies = await getUserCompanies();
+      setDtos(companies);
+      setTenants(companies);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [setTenants]);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleSelect = async (tenant: UserTenantDto) => {
+    const company = tenant.companies[0];
+    if (!company) return;
+    setSwitching(company.companyId);
+    try {
+      const session = await refreshSession({ tenantId: tenant.tenantId, companyId: company.companyId });
+      useAuthStore.getState().setSession(session.accessToken, session.tenantId, session.companyId, session.permissions);
+      setCompanyContext(
+        { id: tenant.tenantId, name: tenant.tenantName, companies: tenant.companies.map((c) => ({ id: c.companyId, name: c.name, fiscalYear: c.activeFiscalYear })) },
+        { id: company.companyId, name: company.name, fiscalYear: company.activeFiscalYear },
+      );
+      queryClient.clear();
+      toast.success(`شرکت «${company.name}» فعال شد`, 'سال مالی ' + digitsToPersian(company.activeFiscalYear));
+      navigate('/', { replace: true });
+    } catch {
+      toast.error('انتخاب شرکت انجام نشد', 'دسترسی عضویت فعال به این شرکت وجود ندارد.');
+    } finally {
+      setSwitching(null);
+    }
   };
 
-  return (
-    <div className="max-w-2xl mx-auto space-y-6 py-8">
-      <div className="text-center space-y-2">
-        <h1 className="text-2xl font-bold text-foreground">انتخاب شرکت و دوره کاری</h1>
-        <p className="text-sm text-muted-foreground">
-          لطفا برای ادامه فعالیت و دسترسی به اطلاعات مالی، شرکت موردنظر خود را برگزینید.
-        </p>
+  if (loading) {
+    return (
+      <div className="w-full space-y-3 rounded-xl border bg-surface p-6 shadow-lg" aria-busy="true">
+        <Skeleton className="h-6 w-48" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-16 w-full" />
       </div>
+    );
+  }
 
-      <div className="space-y-6">
-        {mockTenants.map((tenant) => (
-          <Card key={tenant.id} className="border-border shadow-xs">
-            <CardHeader className="pb-3 border-b border-border/50 bg-muted/20">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-5 h-5 text-primary" />
-                <CardTitle className="text-base">{tenant.name}</CardTitle>
-              </div>
-              <CardDescription className="text-xs">
-                شناسه مستأجر: <span className="font-mono">{tenant.id}</span>
-              </CardDescription>
-            </CardHeader>
+  if (loadError) {
+    return (
+      <div className="w-full rounded-xl border bg-surface p-4 shadow-lg">
+        <ErrorState onRetry={() => void load()} />
+      </div>
+    );
+  }
 
-            <CardContent className="pt-4 divide-y divide-border/60">
+  return (
+    <div className="w-full rounded-xl border bg-surface p-6 shadow-lg">
+      <div className="mb-4 flex items-center gap-2">
+        <Building2 className="size-5 text-primary" aria-hidden />
+        <h1 className="text-base font-bold text-foreground">انتخاب شرکت فعال</h1>
+      </div>
+      <p className="mb-4 text-sm text-muted-foreground">
+        داده‌های هر شرکت جدا نگهداری می‌شود؛ پس از انتخاب، cache داده‌های قبلی پاک‌سازی می‌شود.
+      </p>
+
+      <div className="space-y-4">
+        {tenants.length === 0 && (
+          <div className="rounded-md border bg-muted/40 p-6 text-center">
+            <p className="text-sm font-semibold text-foreground">به هیچ شرتی عضو فعال نیستید</p>
+            <p className="mt-1 text-xs text-muted-foreground">با مدیر سازمان خود تماس بگیرید.</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={() => { clearAuth(); navigate('/login', { replace: true }); }}>
+              خروج
+            </Button>
+          </div>
+        )}
+
+        {dtos.map((tenant) => (
+          <section key={tenant.tenantId} className="rounded-lg border p-3">
+            <p className="mb-2 text-xs font-semibold text-muted-foreground">{tenant.tenantName}</p>
+            <div className="space-y-2">
               {tenant.companies.map((company) => {
-                const isSelected = activeCompany?.id === company.id;
+                const selected = switching === company.companyId;
                 return (
-                  <div
-                    key={company.id}
-                    className="flex items-center justify-between py-3.5 hover:bg-muted/40 px-3 rounded-md transition-colors"
+                  <button
+                    key={company.companyId}
+                    type="button"
+                    disabled={switching !== null || !company.isActive}
+                    onClick={() => void handleSelect(tenant)}
+                    className={cn(
+                      'flex w-full cursor-pointer items-center justify-between gap-3 rounded-md border px-3.5 py-3 text-start transition-colors',
+                      'hover:border-primary hover:bg-primary-soft/60',
+                      'disabled:cursor-not-allowed disabled:opacity-50',
+                      selected && 'border-primary bg-primary-soft',
+                    )}
                   >
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-sm text-foreground">{company.name}</span>
-                        {isSelected && (
-                          <span className="flex items-center gap-1 text-[11px] text-success font-semibold">
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            فعال
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-xs text-muted-foreground">سال مالی: {company.fiscalYear}</span>
-                    </div>
-
-                    <Button
-                      size="sm"
-                      variant={isSelected ? 'default' : 'outline'}
-                      onClick={() => handleSelect(tenant, company)}
-                      className="cursor-pointer"
-                    >
-                      ورود به دفاتر
-                      <ChevronLeft className="w-4 h-4 ms-1" />
-                    </Button>
-                  </div>
+                    <span className="flex min-w-0 flex-col">
+                      <span className="truncate text-sm font-semibold text-foreground">{company.name}</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        سال مالی {digitsToPersian(company.activeFiscalYear)}
+                        {!company.isActive && ' · غیرفعال'}
+                      </span>
+                    </span>
+                    <span className="flex items-center gap-2 text-primary">
+                      {selected ? (
+                        <RefreshCw className="size-4 animate-spin" aria-hidden />
+                      ) : (
+                        <Check className="size-4 opacity-0 transition-opacity peer-hover:opacity-100" aria-hidden />
+                      )}
+                    </span>
+                  </button>
                 );
               })}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         ))}
+      </div>
+
+      <div className="mt-5 flex justify-start">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            if (accessToken) navigate('/');
+          }}
+        >
+          ادامه بدون انتخاب (نمایش عمومی)
+        </Button>
       </div>
     </div>
   );

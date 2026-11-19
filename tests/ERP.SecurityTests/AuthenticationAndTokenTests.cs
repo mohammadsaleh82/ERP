@@ -108,7 +108,7 @@ public class AuthenticationAndTokenTests : IDisposable
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        var rawToken = await tokenService.GenerateAndSaveRefreshTokenAsync(user.Id);
+        var rawToken = await tokenService.GenerateAndSaveRefreshTokenAsync(user.Id, Guid.NewGuid(), Guid.NewGuid());
 
         rawToken.Should().NotBeNullOrWhiteSpace();
 
@@ -135,7 +135,7 @@ public class AuthenticationAndTokenTests : IDisposable
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        var rawRefreshToken = await tokenService.GenerateAndSaveRefreshTokenAsync(user.Id);
+        var rawRefreshToken = await tokenService.GenerateAndSaveRefreshTokenAsync(user.Id, Guid.NewGuid(), Guid.NewGuid());
 
         var tenantId = Guid.NewGuid();
         var companyId = Guid.NewGuid();
@@ -182,7 +182,7 @@ public class AuthenticationAndTokenTests : IDisposable
         dbContext.Users.Add(user);
         await dbContext.SaveChangesAsync();
 
-        var token1 = await tokenService.GenerateAndSaveRefreshTokenAsync(user.Id);
+        var token1 = await tokenService.GenerateAndSaveRefreshTokenAsync(user.Id, Guid.NewGuid(), Guid.NewGuid());
 
         // Legitimate user rotates token1 -> receives token2
         var rotate1 = await tokenService.RotateRefreshTokenAsync(

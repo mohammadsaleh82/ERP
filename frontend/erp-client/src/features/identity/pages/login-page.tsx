@@ -1,122 +1,140 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Lock, Mail, ArrowLeft, Loader2 } from 'lucide-react';
-import { Button } from '@/shared/components/ui/button';
+import { z } from 'zod';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { AlertCircle, Building2, LogIn } from 'lucide-react';
 import { Input } from '@/shared/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/components/ui/card';
+import { PasswordInput } from '@/shared/components/forms/password-input';
+import { Button } from '@/shared/components/ui/button';
+import { FormField } from '@/shared/components/forms/form-field';
 import { useAuthStore } from '@/core/auth/auth.store';
-import { toast } from '@/core/notifications/toast';
+import { login, getUserCompanies } from '@/core/auth/auth.service';
+import { useCompanyStore } from '@/core/company/company.store';
+import { ApiError } from '@/core/errors/problem-details';
+import { env } from '@/app/config/env';
 
 const loginSchema = z.object({
-  email: z.string().email('آدرس ایمیل معتبر نیست.'),
-  password: z.string().min(6, 'کلمه عبور باید حداقل ۶ کاراکتر باشد.'),
+  email: z.string().min(1, 'ایمیل الزامی است').email('فرمت ایمیل صحیح نیست'),
+  password: z.string().min(1, 'کلمه عبور الزامی است'),
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type LoginFormData = z.infer<typeof loginSchema>;
 
+/** صفحه ورود با قرارداد واقعی backend — پیام خطای امن و یکسان برای اعتبارات غلط */
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { setAuth } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
+  const location = useLocation();
+  const setAuth = useAuthStore((state) => state.setAuth);
+  const setTenants = useCompanyStore((state) => state.setTenants);
+  const [formError, setFormError] = React.useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
-  } = useForm<LoginFormValues>({
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
+    defaultValues: { email: '', password: '' },
   });
 
-  const onSubmit = async (data: LoginFormValues) => {
-    setIsLoading(true);
+  const from = (location.state as { from?: string } | null)?.from;
+
+  const onSubmit = async (values: LoginFormData) => {
+    setFormError(null);
     try {
-      // Mock login for skeleton phase
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const response = await login(values);
+      // لیست واقعی شرکت‌ها — مبنای صفحه انتخاب شرکت
+      try {
+        const companies = await getUserCompanies();
+        setTenants(companies);
+      } catch {
+        setTenants([]);
+      }
 
       setAuth(
-        {
-          id: 'u-1',
-          email: data.email,
-          fullName: 'مدیر ارشد مالی',
-          roles: ['FinancialAdmin'],
-          permissions: ['system:admin', 'accounting:vouchers:read'],
-        },
-        'mock-jwt-token'
+        { userId: '', email: response.email, fullName: response.fullName, roles: [], permissions: response.permissions },
+        response.accessToken,
+        response.tenantId,
+        response.companyId,
       );
+      // پروفایل کامل پس از ورود (userId/roles) — me endpoint
+      try {
+        const { getCurrentUser } = await import('@/core/auth/auth.service');
+        const profile = await getCurrentUser();
+        useAuthStore.getState().setSession(response.accessToken, response.tenantId, response.companyId, response.permissions);
+        useAuthStore.setState({
+          user: {
+            userId: profile.userId,
+            email: profile.email,
+            fullName: response.fullName || profile.email,
+            roles: profile.roles,
+            permissions: profile.permissions,
+          },
+        });
+      } catch {
+        /* پروفایل غیرحیاتی است؛ ورود باقی می‌ماند */
+      }
 
-      toast.success('ورود با موفقیت انجام شد', 'به سامانه سازمانی ERP خوش آمدید.');
-      navigate('/select-company');
-    } catch {
-      toast.error('خطا در احراز هویت', 'اطلاعات ورود اشتباه است.');
-    } finally {
-      setIsLoading(false);
+      navigate(from || '/select-company', { replace: true });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setFormError(error.message);
+      } else {
+        setFormError('خطای غیرمنتظره در ورود. لطفا دوباره تلاش کنید.');
+      }
     }
   };
 
   return (
-    <Card className="shadow-lg border-border">
-      <CardHeader className="text-center space-y-2 pb-6">
-        <div className="mx-auto w-12 h-12 rounded-xl bg-primary flex items-center justify-center text-primary-foreground font-black text-2xl shadow-md">
-          E
+    <div className="flex flex-col gap-6 rounded-xl border bg-surface p-6 shadow-lg">
+      <div className="flex flex-col items-center gap-2 text-center">
+        <div className="flex size-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+          <Building2 className="size-6" aria-hidden />
         </div>
-        <CardTitle className="text-xl font-bold">ورود به سامانه ERP</CardTitle>
-        <CardDescription>جهت دسترسی به دفاتر مالی و سازمانی، وارد شوید</CardDescription>
-      </CardHeader>
+        <h1 className="text-lg font-bold text-foreground">ورود به {env.appName}</h1>
+        <p className="text-sm text-muted-foreground">با حساب سازمانی خود وارد شوید</p>
+      </div>
 
-      <CardContent>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">پست الکترونیکی</label>
-            <div className="relative">
-              <Input
-                type="email"
-                placeholder="name@company.com"
-                dir="ltr"
-                error={errors.email?.message}
-                {...register('email')}
-                className="ps-9"
-              />
-              <Mail className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-            </div>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+        {formError && (
+          <div role="alert" className="flex items-start gap-2 rounded-md border border-danger/30 bg-danger/5 px-3 py-2.5 text-xs font-medium text-danger">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
+            <span>{formError}</span>
           </div>
+        )}
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium text-foreground">کلمه عبور</label>
-            <div className="relative">
-              <Input
-                type="password"
-                placeholder="••••••••"
-                dir="ltr"
-                error={errors.password?.message}
-                {...register('password')}
-                className="ps-9"
-              />
-              <Lock className="absolute start-3 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-            </div>
-          </div>
+        <FormField id="login-email" label="ایمیل سازمانی" required error={errors.email?.message}>
+          <Input
+            id="login-email"
+            type="email"
+            dir="ltr"
+            autoComplete="username"
+            placeholder="name@company.ir"
+            aria-invalid={Boolean(errors.email)}
+            {...register('email')}
+          />
+        </FormField>
 
-          <Button type="submit" className="w-full mt-2" disabled={isLoading}>
-            {isLoading ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin me-2" />
-                در حال اعتبارسنجی...
-              </>
-            ) : (
-              <>
-                ورود به سامانه
-                <ArrowLeft className="w-4 h-4 ms-2" />
-              </>
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+        <FormField id="login-password" label="کلمه عبور" required error={errors.password?.message}>
+          <PasswordInput
+            id="login-password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            aria-invalid={Boolean(errors.password)}
+            {...register('password')}
+          />
+        </FormField>
+
+        <Button type="submit" className="mt-1 w-full" loading={isSubmitting}>
+          {!isSubmitting && <LogIn className="size-4" aria-hidden />}
+          {isSubmitting ? 'در حال ورود…' : 'ورود'}
+        </Button>
+      </form>
+
+      <p className="text-center text-xs text-muted-foreground">
+        نشست شما با توکن امن HttpOnly محافظت می‌شود؛ دسترسی‌ها بر اساس نقش سازمانی تعیین می‌شوند.
+      </p>
+    </div>
   );
 };

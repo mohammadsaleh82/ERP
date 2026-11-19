@@ -14,7 +14,9 @@ namespace ERP.Modules.Identity.Application.Services;
 public interface ITokenService
 {
     string GenerateAccessToken(AppUser user, Guid tenantId, Guid companyId, Guid? branchId, IEnumerable<string> permissions, IEnumerable<string> roles);
-    Task<string> GenerateAndSaveRefreshTokenAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<string> GenerateAndSaveRefreshTokenAsync(Guid userId, Guid tenantId, Guid companyId, CancellationToken cancellationToken = default);
+    /// <summary>Resolve زنده بودن refresh token و بازگرداندن زمینه ذخیره‌شده آن — null یعنی منقضی/نامعتبر.</summary>
+    Task<(Guid UserId, Guid TenantId, Guid CompanyId)?> ResolveActiveRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
     Task<(string NewAccessToken, string NewRefreshToken)?> RotateRefreshTokenAsync(string refreshToken, Guid tenantId, Guid companyId, Guid? branchId, IEnumerable<string> permissions, IEnumerable<string> roles, CancellationToken cancellationToken = default);
     Task RevokeRefreshTokenAsync(string refreshToken, CancellationToken cancellationToken = default);
 }
@@ -79,7 +81,7 @@ public class TokenService : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public async Task<string> GenerateAndSaveRefreshTokenAsync(Guid userId, CancellationToken cancellationToken = default)
+    public async Task<string> GenerateAndSaveRefreshTokenAsync(Guid userId, Guid tenantId, Guid companyId, CancellationToken cancellationToken = default)
     {
         var rawToken = GenerateSecureRandomToken();
         var tokenHash = HashToken(rawToken);
@@ -91,6 +93,8 @@ public class TokenService : ITokenService
             Id = Guid.NewGuid(),
             UserId = userId,
             TokenHash = tokenHash,
+            TenantId = tenantId,
+            CompanyId = companyId,
             CreatedAtUtc = DateTimeOffset.UtcNow,
             ExpiresAtUtc = DateTimeOffset.UtcNow.AddDays(expiryDays),
         };
@@ -99,6 +103,27 @@ public class TokenService : ITokenService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return rawToken;
+    }
+
+    public async Task<(Guid UserId, Guid TenantId, Guid CompanyId)?> ResolveActiveRefreshTokenAsync(
+        string rawRefreshToken,
+        CancellationToken cancellationToken = default)
+    {
+        var tokenHash = HashToken(rawRefreshToken);
+        var existingToken = await _dbContext.RefreshTokens
+            .AsNoTracking()
+            .FirstOrDefaultAsync(t => t.TokenHash == tokenHash, cancellationToken);
+
+        if (existingToken is null ||
+            existingToken.IsRevoked ||
+            existingToken.IsExpired ||
+            existingToken.TenantId is null ||
+            existingToken.CompanyId is null)
+        {
+            return null;
+        }
+
+        return (existingToken.UserId, existingToken.TenantId.Value, existingToken.CompanyId.Value);
     }
 
     public async Task<(string NewAccessToken, string NewRefreshToken)?> RotateRefreshTokenAsync(
