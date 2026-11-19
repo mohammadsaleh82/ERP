@@ -1,3 +1,4 @@
+import React, { Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { AppLayout } from '@/app/layouts/app-layout';
 import { AuthLayout } from '@/app/layouts/auth-layout';
@@ -5,50 +6,34 @@ import { AuthGuard } from '@/app/guards/auth-guard';
 import { CompanyGuard } from '@/app/guards/company-guard';
 import { PermissionGuard } from '@/app/guards/permission-guard';
 import { PERMISSIONS } from '@/core/auth/permissions';
-
-import { LoginPage } from '@/features/identity/pages/login-page';
+import { LoadingState } from '@/shared/components/feedback/loading-state';
 import { NotFoundPage } from '@/features/identity/pages/not-found-page';
 import { AccessDeniedPage } from '@/features/identity/pages/access-denied-page';
-import { CompanySelectionPage } from '@/features/organization/pages/company-selection-page';
-import { DashboardPage } from '@/features/dashboard/pages/dashboard-page';
 
-import { AccountingPage } from '@/features/accounting';
-import { AccountsPage } from '@/features/accounts';
-import { FiscalYearsPage } from '@/features/fiscal';
-import { AccountingSettingsPage } from '@/features/accounting/pages/accounting-settings-page';
-import { VouchersPage } from '@/features/documents';
-import { VoucherFormPage } from '@/features/documents/pages/voucher-form-page';
-import { VoucherDetailPage } from '@/features/documents/pages/voucher-detail-page';
-import {
-  BalanceSheetPage,
-  ProfitLossPage,
-  CashFlowPage,
-  PartyLedgerPage,
-  AgingPage,
-} from '@/features/reports/statements-index';
-import {
-  JournalPage,
-  GeneralLedgerPage,
-  LedgerTransactionsPage,
-  SubsidiaryLedgerPage,
-  AccountTurnoverPage,
-  AccountCardPage,
-  AccountBalancesPage,
-  TrialBalancePage,
-  DimensionsTurnoverPage,
-  CombinedDimensionsPage,
-} from '@/features/reports';
-import { TreasuryPage } from '@/features/treasury';
-import { InventoryPage } from '@/features/inventory';
-import { SalesPage } from '@/features/sales';
-import { PurchasingPage } from '@/features/purchasing';
-import { PartiesPage } from '@/features/parties';
-import { PayrollPage } from '@/features/payroll';
-import { ReportingPage } from '@/features/reporting';
-import { OrganizationPage } from '@/features/organization';
-import { SettingsPage } from '@/features/settings';
-import { ProfilePage } from '@/features/settings/pages/profile-page';
-import { DesignSystemShowcasePage } from '@/features/design-system/pages/design-system-showcase-page';
+/* فاز ۹ — code splitting: هر صفحه chunk خودش؛ fallback مشترک LoadingState.
+   صفحات کوچک مشترک (404/deny) eager می‌مانند. helper با named exports کار می‌کند. */
+const PartyLedgerWrapper: React.FC<{ kind: 'receivables' | 'payables' }> = ({ kind }) => {
+  const Component = React.lazy(() =>
+    import('@/features/reports/statements-index').then((mod) => ({ default: mod.PartyLedgerPage })),
+  );
+  return (
+    <Suspense fallback={<LoadingState message="در حال بارگذاری صفحه…" />}>
+      <Component kind={kind} />
+    </Suspense>
+  );
+};
+
+const page = (factory: () => Promise<Record<string, unknown>>, name: string) => {
+  const Component = React.lazy(async () => {
+    const mod = (await factory()) as Record<string, React.ComponentType>;
+    return { default: mod[name] };
+  });
+  return (
+    <Suspense fallback={<LoadingState message="در حال بارگذاری صفحه…" />}>
+      <Component />
+    </Suspense>
+  );
+};
 
 export const router = createBrowserRouter([
   // Public Auth Routes
@@ -57,7 +42,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/login',
-        element: <LoginPage />,
+        element: page(() => import('@/features/identity/pages/login-page'), 'LoginPage'),
       },
     ],
   },
@@ -68,7 +53,7 @@ export const router = createBrowserRouter([
     children: [
       {
         path: '/select-company',
-        element: <CompanySelectionPage />,
+        element: page(() => import('@/features/organization/pages/company-selection-page'), 'CompanySelectionPage'),
       },
       {
         path: '/access-denied',
@@ -89,13 +74,13 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: '/',
-                element: <DashboardPage />,
+                element: page(() => import('@/features/dashboard/pages/dashboard-page'), 'DashboardPage'),
               },
               {
                 path: '/accounting',
                 element: (
                   <PermissionGuard permissions={[PERMISSIONS.documentsRead, PERMISSIONS.accountsRead]}>
-                    <AccountingPage />
+                    {page(() => import('@/features/accounting'), 'AccountingPage')}
                   </PermissionGuard>
                 ),
               },
@@ -103,7 +88,7 @@ export const router = createBrowserRouter([
                 path: '/accounting/documents',
                 element: (
                   <PermissionGuard permissions={[PERMISSIONS.documentsRead]}>
-                    <VouchersPage />
+                    {page(() => import('@/features/documents'), 'VouchersPage')}
                   </PermissionGuard>
                 ),
               },
@@ -111,7 +96,7 @@ export const router = createBrowserRouter([
                 path: '/accounting/documents/new',
                 element: (
                   <PermissionGuard permissions={[PERMISSIONS.documentsCreate]}>
-                    <VoucherFormPage />
+                    {page(() => import('@/features/documents/pages/voucher-form-page'), 'VoucherFormPage')}
                   </PermissionGuard>
                 ),
               },
@@ -119,79 +104,79 @@ export const router = createBrowserRouter([
                 path: '/accounting/documents/:id',
                 element: (
                   <PermissionGuard permissions={[PERMISSIONS.documentsRead]}>
-                    <VoucherDetailPage />
+                    {page(() => import('@/features/documents/pages/voucher-detail-page'), 'VoucherDetailPage')}
                   </PermissionGuard>
                 ),
               },
               {
                 path: '/accounting/reports/journal',
-                element: <JournalPage />,
+                element: page(() => import('@/features/reports'), 'JournalPage'),
               },
               {
                 path: '/accounting/reports/general-ledger',
-                element: <GeneralLedgerPage />,
+                element: page(() => import('@/features/reports'), 'GeneralLedgerPage'),
               },
               {
                 path: '/accounting/reports/general-ledger/:accountId',
-                element: <LedgerTransactionsPage />,
+                element: page(() => import('@/features/reports'), 'LedgerTransactionsPage'),
               },
               {
                 path: '/accounting/reports/subsidiary',
-                element: <SubsidiaryLedgerPage />,
+                element: page(() => import('@/features/reports'), 'SubsidiaryLedgerPage'),
               },
               {
                 path: '/accounting/reports/turnover',
-                element: <AccountTurnoverPage />,
+                element: page(() => import('@/features/reports'), 'AccountTurnoverPage'),
               },
               {
                 path: '/accounting/reports/account-card',
-                element: <AccountCardPage />,
+                element: page(() => import('@/features/reports'), 'AccountCardPage'),
               },
               {
                 path: '/accounting/reports/balances',
-                element: <AccountBalancesPage />,
+                element: page(() => import('@/features/reports'), 'AccountBalancesPage'),
               },
               {
                 path: '/accounting/reports/trial-balance',
-                element: <TrialBalancePage />,
+                element: page(() => import('@/features/reports'), 'TrialBalancePage'),
               },
               {
                 path: '/accounting/reports/dimensions',
-                element: <DimensionsTurnoverPage />,
+                element: page(() => import('@/features/reports'), 'DimensionsTurnoverPage'),
               },
               {
                 path: '/accounting/reports/dimensions/combined',
-                element: <CombinedDimensionsPage />,
+                element: page(() => import('@/features/reports'), 'CombinedDimensionsPage'),
               },
               {
                 path: '/accounting/reports/balance-sheet',
-                element: <BalanceSheetPage />,
+                element: page(() => import('@/features/reports/statements-index'), 'BalanceSheetPage'),
               },
               {
                 path: '/accounting/reports/profit-loss',
-                element: <ProfitLossPage />,
+                element: page(() => import('@/features/reports/statements-index'), 'ProfitLossPage'),
               },
               {
                 path: '/accounting/reports/cash-flow',
-                element: <CashFlowPage />,
+                element: page(() => import('@/features/reports/statements-index'), 'CashFlowPage'),
               },
               {
                 path: '/accounting/reports/receivables',
-                element: <PartyLedgerPage kind="receivables" />,
+                element: <PartyLedgerWrapper kind="receivables" />,
               },
               {
                 path: '/accounting/reports/payables',
-                element: <PartyLedgerPage kind="payables" />,
+                element: <PartyLedgerWrapper kind="payables" />,
               },
               {
                 path: '/accounting/reports/aging',
-                element: <AgingPage />,
+                element: page(() => import('@/features/reports/statements-index'), 'AgingPage'),
               },
               {
                 path: '/accounting/accounts',
                 element: (
                   <PermissionGuard permissions={[PERMISSIONS.accountsRead]}>
-                    <AccountsPage />
+                    {page(() => import('@/features/accounts'), 'AccountsPage')}
                   </PermissionGuard>
                 ),
               },
@@ -199,7 +184,7 @@ export const router = createBrowserRouter([
                 path: '/accounting/fiscal-years',
                 element: (
                   <PermissionGuard permissions={[PERMISSIONS.fiscalYearsRead]}>
-                    <FiscalYearsPage />
+                    {page(() => import('@/features/fiscal'), 'FiscalYearsPage')}
                   </PermissionGuard>
                 ),
               },
@@ -207,61 +192,61 @@ export const router = createBrowserRouter([
                 path: '/accounting/settings',
                 element: (
                   <PermissionGuard permissions={[PERMISSIONS.settingsRead]}>
-                    <AccountingSettingsPage />
+                    {page(() => import('@/features/accounting/pages/accounting-settings-page'), 'AccountingSettingsPage')}
                   </PermissionGuard>
                 ),
               },
               {
                 path: '/treasury',
-                element: <TreasuryPage />,
+                element: page(() => import('@/features/treasury'), 'TreasuryPage'),
               },
               {
                 path: '/inventory',
-                element: <InventoryPage />,
+                element: page(() => import('@/features/inventory'), 'InventoryPage'),
               },
               {
                 path: '/sales',
-                element: <SalesPage />,
+                element: page(() => import('@/features/sales'), 'SalesPage'),
               },
               {
                 path: '/purchasing',
-                element: <PurchasingPage />,
+                element: page(() => import('@/features/purchasing'), 'PurchasingPage'),
               },
               {
                 path: '/parties',
-                element: <PartiesPage />,
+                element: page(() => import('@/features/parties'), 'PartiesPage'),
               },
               {
                 path: '/payroll',
-                element: <PayrollPage />,
+                element: page(() => import('@/features/payroll'), 'PayrollPage'),
               },
               {
                 path: '/reporting',
                 element: (
                   <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
-                    <ReportingPage />
+                    {page(() => import('@/features/reporting'), 'ReportingPage')}
                   </PermissionGuard>
                 ),
               },
               {
                 path: '/organization',
-                element: <OrganizationPage />,
+                element: page(() => import('@/features/organization'), 'OrganizationPage'),
               },
               {
                 path: '/identity',
-                element: <OrganizationPage />, // Reusable admin view for skeleton
+                element: page(() => import('@/features/organization'), 'OrganizationPage'), // Reusable admin view for skeleton
               },
               {
                 path: '/settings',
-                element: <SettingsPage />,
+                element: page(() => import('@/features/settings'), 'SettingsPage'),
               },
               {
                 path: '/profile',
-                element: <ProfilePage />,
+                element: page(() => import('@/features/settings/pages/profile-page'), 'ProfilePage'),
               },
               {
                 path: '/design-system',
-                element: <DesignSystemShowcasePage />,
+                element: page(() => import('@/features/design-system/pages/design-system-showcase-page'), 'DesignSystemShowcasePage'),
               },
             ],
           },

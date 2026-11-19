@@ -30,6 +30,13 @@ export const GlobalSearch: React.FC = () => {
   const [term, setTerm] = React.useState('');
   const [debounced, setDebounced] = React.useState('');
 
+  /* فاز ۹ — میان‌بر Ctrl+K از Header (رویداد سراسری) پنل را باز می‌کند */
+  React.useEffect(() => {
+    const openSearch = () => setOpen(true);
+    window.addEventListener('erp:open-global-search', openSearch);
+    return () => window.removeEventListener('erp:open-global-search', openSearch);
+  }, []);
+
   const [documents, setDocuments] = React.useState<DocumentDto[]>([]);
   const [accounts, setAccounts] = React.useState<AccountDto[]>([]);
   const [docState, setDocState] = React.useState<SectionState>('idle');
@@ -96,7 +103,7 @@ export const GlobalSearch: React.FC = () => {
           <kbd className="hidden rounded border bg-background px-1 text-[10px] lg:inline">Ctrl K</kbd>
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-3" align="start">
+      <PopoverContent className="w-[min(24rem,calc(100vw-1.5rem))] p-3" align="start">
         <Input
           autoFocus
           value={term}

@@ -31,6 +31,7 @@ const SectionBlock: React.FC<{ section: StatementSectionDto | undefined; label: 
         {rows.length === 0 ? (
           <p className="py-5 text-center text-xs text-muted-foreground">حسابی در این بخش نیست</p>
         ) : (
+          <div className="overflow-x-auto">
           <table className="w-full text-xs" aria-label={label} data-testid={testId}>
             <thead className="bg-muted/40 text-muted-foreground">
               <tr>
@@ -55,6 +56,7 @@ const SectionBlock: React.FC<{ section: StatementSectionDto | undefined; label: 
               </tr>
             </tfoot>
           </table>
+          </div>
         )}
       </CardContent>
     </Card>

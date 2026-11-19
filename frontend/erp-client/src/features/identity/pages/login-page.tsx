@@ -28,6 +28,11 @@ export const LoginPage: React.FC = () => {
   const setAuth = useAuthStore((state) => state.setAuth);
   const setTenants = useCompanyStore((state) => state.setTenants);
   const [formError, setFormError] = React.useState<string | null>(null);
+  /* فاز ۹ — پس از خطای ورود، فوکوس به پیام خطا می‌رود تا screen reader/کیبورد آن را دریافت کند */
+  const alertRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    if (formError) alertRef.current?.focus();
+  }, [formError]);
 
   const {
     register,
@@ -98,7 +103,7 @@ export const LoginPage: React.FC = () => {
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
         {formError && (
-          <div role="alert" className="flex items-start gap-2 rounded-md border border-danger/30 bg-danger/5 px-3 py-2.5 text-xs font-medium text-danger">
+          <div ref={alertRef} tabIndex={-1} role="alert" className="flex items-start gap-2 rounded-md border border-danger/30 bg-danger/5 px-3 py-2.5 text-xs font-medium text-danger outline-none">
             <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
             <span>{formError}</span>
           </div>

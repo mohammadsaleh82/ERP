@@ -205,6 +205,7 @@ const CashFlowContent: React.FC = () => {
           {buckets.length === 0 && report.data ? (
             <p className="py-8 text-center text-xs text-muted-foreground">جریانی طبقه‌بندی‌شده در این بازه نیست — طبقه‌بندی حساب‌ها را تکمیل کنید.</p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-xs" aria-label="جریان وجوه نقد" data-testid="cf-table">
               <thead className="bg-muted/40 text-muted-foreground">
                 <tr>
@@ -233,6 +234,7 @@ const CashFlowContent: React.FC = () => {
                 </tr>
               </tfoot>
             </table>
+            </div>
           )}
         </CardContent>
       </Card>

@@ -24,7 +24,7 @@ export const Modal: React.FC<ModalProps> = ({ open, onOpenChange, title, descrip
       <DialogPrimitive.Content
         dir="rtl"
         className={cn(
-          'fixed top-1/2 left-1/2 z-50 w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2',
+          'fixed top-1/2 left-1/2 z-50 flex max-h-[calc(100vh-2rem)] w-[calc(100vw-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-y-auto thin-scroll',
           'rounded-xl border bg-surface p-5 shadow-lg focus:outline-none',
           sizeMap[size],
         )}

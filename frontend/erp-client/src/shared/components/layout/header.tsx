@@ -1,14 +1,16 @@
 import * as React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Building, CalendarRange, Check, ChevronDown, LogOut, Moon, Sun, UserRound } from 'lucide-react';
+import { Bell, Building, CalendarRange, Check, ChevronDown, LogOut, Menu, Moon, Sun, UserRound } from 'lucide-react';
 import { Button } from '@/shared/components/ui/button';
 import { Badge } from '@/shared/components/ui/badge';
 import { Avatar } from '@/shared/components/ui/avatar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/popover';
+import { Drawer } from '@/shared/components/ui/drawer';
 import { Tooltip } from '@/shared/components/ui/tooltip';
 import { toast } from '@/core/notifications/toast';
 import { useCompanyStore, type CompanySummary, type TenantSummary } from '@/core/company/company.store';
 import { GlobalSearch } from '@/features/search/global-search';
+import { SidebarNavItems } from '@/shared/components/layout/sidebar';
 import { useAuthStore } from '@/core/auth/auth.store';
 import { queryClient } from '@/app/providers/query-provider';
 import { logout, refreshSession } from '@/core/auth/auth.service';
@@ -26,6 +28,20 @@ export const Header: React.FC = () => {
   const [switching, setSwitching] = React.useState<string | null>(null);
   const [companyOpen, setCompanyOpen] = React.useState(false);
   const [userOpen, setUserOpen] = React.useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = React.useState(false);
+
+  /* فاز ۹ — میان‌بر Ctrl+K / Cmd+K جست‌وجوی سراسری که در UI وعده داده شده بود */
+  React.useEffect(() => {
+    const handler = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setMobileNavOpen(false);
+        window.dispatchEvent(new CustomEvent('erp:open-global-search'));
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, []);
 
   /**
    * تعویض شرکت: refresh با هدرهای زمینه جدید → access token + permissions جدید
@@ -65,8 +81,19 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-border bg-surface px-4 sm:px-6">
-      {/* Right side (RTL): Company switcher + fiscal badge */}
+      {/* Right side (RTL): mobile nav + Company switcher + fiscal badge */}
       <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="md:hidden"
+          aria-label="باز کردن منوی ناوبری"
+          aria-expanded={mobileNavOpen}
+          onClick={() => setMobileNavOpen(true)}
+          data-testid="mobile-nav-trigger"
+        >
+          <Menu className="size-5" aria-hidden />
+        </Button>
         <Popover open={companyOpen} onOpenChange={setCompanyOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -88,7 +115,7 @@ export const Header: React.FC = () => {
           </PopoverTrigger>
           <PopoverContent className="w-72 p-0" align="start">
             <p className="border-b px-3 py-2 text-xs font-semibold text-muted-foreground">شرکت‌های شما</p>
-            <div className="thin-scroll max-h-72 overflow-y-auto p-1" role="listbox" aria-label="شرکت‌ها">
+            <div className="thin-scroll max-h-72 overflow-y-auto p-1">
               {tenants.length === 0 ? (
                 <p className="p-4 text-center text-xs text-muted-foreground">شرکتی یافت نشد</p>
               ) : (
@@ -101,8 +128,7 @@ export const Header: React.FC = () => {
                         <button
                           key={company.id}
                           type="button"
-                          role="option"
-                          aria-selected={isActive}
+                          aria-current={isActive ? 'true' : undefined}
                           disabled={switching !== null}
                           onClick={() => handleCompanySwitch(tenant, company)}
                           className={cn(
@@ -196,6 +222,18 @@ export const Header: React.FC = () => {
             </button>
           </PopoverContent>
         </Popover>
+
+        {/* ناوبری موبایل — فاز ۹: در زیر md منوی Sidebar در کشو در دسترس است */}
+        <Drawer
+          open={mobileNavOpen}
+          onOpenChange={setMobileNavOpen}
+          title="ناوبری"
+          description={activeCompany ? `${activeCompany.name} · ${activeTenant?.name ?? ''}` : undefined}
+        >
+          <nav aria-label="منوی موبایل" className="space-y-1">
+            <SidebarNavItems onNavigate={() => setMobileNavOpen(false)} />
+          </nav>
+        </Drawer>
       </div>
     </header>
   );

@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { menuItems } from '@/app/config/menu';
 import { useCompanyStore } from '@/core/company/company.store';
@@ -9,13 +9,55 @@ import { cn } from '@/shared/utils/cn';
 /**
  * Sidebar با فیلتر مجوز واقعی، active state پایدار (NavLink) و جمع‌شدن پایدار.
  * آیتم‌های بدون مجوز حذف می‌شوند — نه disabled.
+ * فاز ۹: aria-current روی isActive (نه فقط مسیر دقیق) + رندر مشترک آیتم‌ها برای
+ * کشوی ناوبری موبایل (SidebarNavItems) تا ناوبری در زیر md هم موجود باشد.
  */
+export const SidebarNavItems: React.FC<{ collapsed?: boolean; onNavigate?: () => void }> = ({ collapsed = false, onNavigate }) => {
+  const hasAny = useAuthStore((state) => state.hasAnyPermission);
+  const visibleItems = React.useMemo(
+    () => menuItems.filter((item) => !item.permissions || hasAny(item.permissions)),
+    [hasAny],
+  );
+
+  return (
+    <>
+      {visibleItems.map((item) => {
+        const Icon = item.icon;
+        return (
+          <NavLink
+            key={item.href}
+            to={item.href}
+            end={item.href === '/'}
+            onClick={onNavigate}
+            className={({ isActive }) =>
+              cn(
+                'flex items-center gap-3 select-none rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-primary font-semibold text-primary-foreground shadow-xs'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                collapsed && 'justify-center px-0',
+              )
+            }
+            title={collapsed ? item.label : undefined}
+            aria-label={item.label}
+          >
+            {({ isActive }) => (
+              <>
+                <Icon className="size-5 shrink-0" aria-hidden />
+                {!collapsed && <span>{item.label}</span>}
+                {/* حالت فعال بدون اتکا به رنگ — برای screen reader */}
+                <span className="sr-only">{isActive ? '(صفحه جاری)' : ''}</span>
+              </>
+            )}
+          </NavLink>
+        );
+      })}
+    </>
+  );
+};
+
 export const Sidebar: React.FC = () => {
   const { sidebarCollapsed, toggleSidebar, activeCompany, activeTenant } = useCompanyStore();
-  const hasAny = useAuthStore((state) => state.hasAnyPermission);
-  const location = useLocation();
-
-  const visibleItems = menuItems.filter((item) => !item.permissions || hasAny(item.permissions));
 
   return (
     <aside
@@ -55,30 +97,7 @@ export const Sidebar: React.FC = () => {
 
       {/* Nav */}
       <nav aria-label="منوی اصلی" className="thin-scroll flex-1 space-y-1 overflow-y-auto px-2 py-4">
-        {visibleItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.href}
-              to={item.href}
-              end={item.href === '/'}
-              className={({ isActive }) =>
-                cn(
-                  'flex items-center gap-3 select-none rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
-                  isActive
-                    ? 'bg-primary font-semibold text-primary-foreground shadow-xs'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                  sidebarCollapsed && 'justify-center px-0',
-                )
-              }
-              title={sidebarCollapsed ? item.label : undefined}
-              aria-current={location.pathname === item.href ? 'page' : undefined}
-            >
-              <Icon className="size-5 shrink-0" aria-hidden />
-              {!sidebarCollapsed && <span>{item.label}</span>}
-            </NavLink>
-          );
-        })}
+        <SidebarNavItems collapsed={sidebarCollapsed} />
       </nav>
 
       <div className="border-t border-border p-3 text-center">

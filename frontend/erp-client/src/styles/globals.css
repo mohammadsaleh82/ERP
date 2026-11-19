@@ -134,3 +134,29 @@
     font-weight: 700 !important;
   }
 }
+
+/* ── فاز ۹ — Accessibility: حلقه فوکوس سراسری + skip-link ──────────── */
+/* عناصر سفارشی (دکمه‌های انتخاب شرکت، درخت حساب، سلول‌های جدول و…) که از کیت UI
+   نیستند هم هنگام ناوبری کیبورد حلقه فوکوس یکسان داشته باشند؛ کلیک موس حلقه نمی‌گیرد */
+:focus-visible {
+  outline: 2px solid var(--ring, #2563eb);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: 1rem;
+  top: -3rem;
+  z-index: 100;
+  border-radius: 0.5rem;
+  background: var(--primary, #2563eb);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  transition: top 0.15s ease;
+}
+.skip-link:focus {
+  top: 0.5rem;
+}

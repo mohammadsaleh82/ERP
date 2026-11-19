@@ -92,6 +92,7 @@ const AgingContent: React.FC = () => {
           {buckets.length === 0 && report.data ? (
             <p className="py-8 text-center text-xs text-muted-foreground">سبدی برای نمایش نیست — مطالبات سررسیددار ثبت نشده است.</p>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-xs" aria-label="سبد‌های سنی" data-testid="aging-table">
               <thead className="bg-muted/40 text-muted-foreground">
                 <tr>
@@ -120,6 +121,7 @@ const AgingContent: React.FC = () => {
                 </tr>
               </tfoot>
             </table>
+            </div>
           )}
         </CardContent>
       </Card>

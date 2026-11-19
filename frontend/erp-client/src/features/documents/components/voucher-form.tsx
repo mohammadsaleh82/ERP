@@ -34,6 +34,7 @@ import { PERMISSIONS } from '@/core/auth/permissions';
 import { ApiError } from '@/core/errors/problem-details';
 import { toast } from '@/core/notifications/toast';
 import { cn } from '@/shared/utils/cn';
+import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes';
 
 export interface VoucherFormProps {
   /** ویرایش پیش‌نویس موجود */
@@ -81,6 +82,25 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({ editingDocument, onSav
       if (openYear) setFiscalYearId(openYear.id);
     }
   }, [years.data, fiscalYearId]);
+
+  /* فاز ۹ — تشخیص dirty برای محافظ خروج: سریال‌سازی نرمال‌شده بدون keyهای نویزی */
+  const formSignature = React.useMemo(
+    () => JSON.stringify({
+      documentDate, description: description.trim(), referenceNumber: referenceNumber.trim(), fiscalYearId,
+      lines: lines.map((line) => [line.accountId ?? '', line.side, line.amount || '0', line.description.trim()]),
+    }),
+    [documentDate, description, referenceNumber, fiscalYearId, lines],
+  );
+  const baselineSignature = React.useMemo(
+    () => JSON.stringify({
+      documentDate: editingDocument?.documentDate ?? '', description: editingDocument?.description ?? '',
+      referenceNumber: editingDocument?.referenceNumber ?? '', fiscalYearId: editingDocument?.fiscalYearId ?? '',
+      lines: editingDocument ? detailToLineDrafts(editingDocument).map((line) => [line.accountId ?? '', line.side, line.amount || '0', line.description.trim()]) : [['', 'Debit', '0', '']],
+    }),
+    [editingDocument],
+  );
+  const isDirty = formSignature !== baselineSignature;
+  const { guardDialog } = useUnsavedChangesGuard({ dirty: isDirty, title: 'خروج از سند نیمه‌کاره' });
 
   const totals = React.useMemo(() => computeTotals(lines), [lines]);
   const periodCheck = React.useMemo(
@@ -143,9 +163,24 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({ editingDocument, onSav
     idempotencyKey: crypto.randomUUID(),
   });
 
+  /* refs برای انتقال فوکوس به فیلد خطا (فاز ۹ — accessibility) */
+  const dateRef = React.useRef<HTMLInputElement>(null);
+  const descriptionRef = React.useRef<HTMLTextAreaElement>(null);
+  const lineRefs = React.useRef<Array<HTMLDivElement | null>>([]);
+
+  const focusFirstErrorField = React.useCallback(() => {
+    if (!documentDate) { dateRef.current?.focus(); return; }
+    if (!description.trim()) { descriptionRef.current?.focus(); return; }
+    const badLineIndex = lines.findIndex((line) => !line.accountId || !line.amount || Number(line.amount) === 0);
+    if (badLineIndex >= 0) {
+      const firstInput = lineRefs.current[badLineIndex]?.querySelector('input, button') as HTMLInputElement | null;
+      firstInput?.focus();
+    }
+  }, [documentDate, description, lines]);
+
   const save = async (thenSubmit: boolean): Promise<string | null> => {
     setShowErrors(true);
-    if (!validation.isValid) return null;
+    if (!validation.isValid) { focusFirstErrorField(); return null; }
     setSaving(true);
     try {
       let documentId: string | null = editingDocument?.id ?? null;
@@ -184,7 +219,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({ editingDocument, onSav
         <CardContent className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
           <div>
             <label htmlFor="v-date" className="mb-1 block text-xs font-semibold">تاریخ سند *</label>
-            <Input id="v-date" type="date" dir="ltr" value={documentDate} onChange={(event) => setDocumentDate(event.target.value)} data-testid="voucher-date" />
+            <Input id="v-date" type="date" dir="ltr" value={documentDate} onChange={(event) => setDocumentDate(event.target.value)} data-testid="voucher-date" ref={dateRef} />
           </div>
           <div>
             <label htmlFor="v-year" className="mb-1 block text-xs font-semibold">سال مالی</label>
@@ -200,7 +235,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({ editingDocument, onSav
           </div>
           <div className="sm:col-span-2 lg:col-span-1">
             <label htmlFor="v-desc" className="mb-1 block text-xs font-semibold">شرح سند *</label>
-            <Textarea id="v-desc" rows={1} value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} data-testid="voucher-description" />
+            <Textarea id="v-desc" rows={1} value={description} onChange={(event) => setDescription(event.target.value)} maxLength={500} data-testid="voucher-description" ref={descriptionRef} />
           </div>
         </CardContent>
       </Card>
@@ -236,6 +271,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({ editingDocument, onSav
               <LineRow
                 key={line.key}
                 index={index}
+                containerRef={(node) => { lineRefs.current[index] = node; }}
                 line={line}
                 canMoveUp={index > 0}
                 canMoveDown={index < lines.length - 1}
@@ -266,6 +302,8 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({ editingDocument, onSav
         </CardContent>
       </Card>
 
+      {guardDialog}
+
       {/* عملیات */}
       <div className="flex flex-wrap items-center gap-2">
         <Button onClick={() => void save(false)} disabled={saving} data-testid="save-draft">
@@ -290,6 +328,7 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({ editingDocument, onSav
 
 interface LineRowProps {
   index: number;
+  containerRef?: (node: HTMLDivElement | null) => void;
   line: LineDraft;
   canMoveUp: boolean;
   canMoveDown: boolean;
@@ -300,11 +339,11 @@ interface LineRowProps {
   showError: boolean;
 }
 
-const LineRow: React.FC<LineRowProps> = ({ index, line, canMoveUp, canMoveDown, onChange, onDuplicate, onRemove, onMove, showError }) => {
+const LineRow: React.FC<LineRowProps> = ({ index, containerRef, line, canMoveUp, canMoveDown, onChange, onDuplicate, onRemove, onMove, showError }) => {
   const sideError = showError && (!line.accountId || !line.amount || line.amount === 'NaN' || Number(line.amount) === 0 ? 'ردیف ناقص' : null);
 
   return (
-    <div className="grid grid-cols-1 items-start gap-1.5 rounded-md border border-border/40 p-2 sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)_7rem_7rem_auto]" data-testid={`line-row-${index + 1}`}>
+    <div ref={containerRef} className="grid grid-cols-1 items-start gap-1.5 rounded-md border border-border/40 p-2 sm:grid-cols-[2rem_minmax(0,1fr)_minmax(0,1fr)_7rem_7rem_auto]" data-testid={`line-row-${index + 1}`}>
       <span className="pt-1.5 text-center text-[11px] text-muted-foreground tabular-nums">{index + 1}</span>
 
       {/* حساب */}
