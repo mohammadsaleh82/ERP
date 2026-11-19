@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/shared/components/ui/
 import { Tooltip } from '@/shared/components/ui/tooltip';
 import { toast } from '@/core/notifications/toast';
 import { useCompanyStore, type CompanySummary, type TenantSummary } from '@/core/company/company.store';
+import { GlobalSearch } from '@/features/search/global-search';
 import { useAuthStore } from '@/core/auth/auth.store';
 import { queryClient } from '@/app/providers/query-provider';
 import { logout, refreshSession } from '@/core/auth/auth.service';
@@ -132,8 +133,9 @@ export const Header: React.FC = () => {
         )}
       </div>
 
-      {/* Left side (RTL): actions + user menu */}
+      {/* Left side (RTL): global search + actions + user menu */}
       <div className="flex items-center gap-1 sm:gap-2">
+        <GlobalSearch />
         <Button variant="ghost" size="icon" onClick={toggleTheme} aria-label={theme === 'dark' ? 'تم روشن' : 'تم تاریک'}>
           {theme === 'dark' ? <Sun className="size-4 text-warning" aria-hidden /> : <Moon className="size-4 text-muted-foreground" aria-hidden />}
         </Button>
