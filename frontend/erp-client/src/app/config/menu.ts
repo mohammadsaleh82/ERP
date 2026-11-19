@@ -5,6 +5,7 @@
 import {
   LayoutDashboard,
   Receipt,
+  FileText,
   Landmark,
   Boxes,
   ShoppingCart,
@@ -32,6 +33,7 @@ export interface MenuItem {
 export const menuItems: MenuItem[] = [
   { label: 'داشبورد مدیریتی', href: '/', icon: LayoutDashboard },
   { label: 'حسابداری مالی', href: '/accounting', icon: Receipt, permissions: [PERMISSIONS.documentsRead, PERMISSIONS.accountsRead] },
+  { label: 'اسناد حسابداری', href: '/accounting/documents', icon: FileText, permissions: [PERMISSIONS.documentsRead] },
   { label: 'کدینگ حساب‌ها', href: '/accounting/accounts', icon: ListTree, permissions: [PERMISSIONS.accountsRead] },
   { label: 'سال مالی و دوره‌ها', href: '/accounting/fiscal-years', icon: CalendarRange, permissions: [PERMISSIONS.fiscalYearsRead] },
   { label: 'تنظیمات حسابداری', href: '/accounting/settings', icon: Settings2, permissions: [PERMISSIONS.settingsRead] },
@@ -51,6 +53,8 @@ export const menuItems: MenuItem[] = [
 export const routeTitles: Record<string, string> = {
   '/': 'داشبورد مدیریتی',
   '/accounting': 'حسابداری مالی',
+  '/accounting/documents': 'حسابداری مالی — اسناد حسابداری',
+  '/accounting/documents/new': 'حسابداری مالی — سند جدید',
   '/accounting/accounts': 'حسابداری مالی — کدینگ حساب‌ها',
   '/accounting/fiscal-years': 'حسابداری مالی — سال مالی و دوره‌ها',
   '/accounting/settings': 'حسابداری مالی — تنظیمات حسابداری',
