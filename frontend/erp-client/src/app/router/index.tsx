@@ -20,6 +20,13 @@ import { VouchersPage } from '@/features/documents';
 import { VoucherFormPage } from '@/features/documents/pages/voucher-form-page';
 import { VoucherDetailPage } from '@/features/documents/pages/voucher-detail-page';
 import {
+  BalanceSheetPage,
+  ProfitLossPage,
+  CashFlowPage,
+  PartyLedgerPage,
+  AgingPage,
+} from '@/features/reports/statements-index';
+import {
   JournalPage,
   GeneralLedgerPage,
   LedgerTransactionsPage,
@@ -155,6 +162,30 @@ export const router = createBrowserRouter([
               {
                 path: '/accounting/reports/dimensions/combined',
                 element: <CombinedDimensionsPage />,
+              },
+              {
+                path: '/accounting/reports/balance-sheet',
+                element: <BalanceSheetPage />,
+              },
+              {
+                path: '/accounting/reports/profit-loss',
+                element: <ProfitLossPage />,
+              },
+              {
+                path: '/accounting/reports/cash-flow',
+                element: <CashFlowPage />,
+              },
+              {
+                path: '/accounting/reports/receivables',
+                element: <PartyLedgerPage kind="receivables" />,
+              },
+              {
+                path: '/accounting/reports/payables',
+                element: <PartyLedgerPage kind="payables" />,
+              },
+              {
+                path: '/accounting/reports/aging',
+                element: <AgingPage />,
               },
               {
                 path: '/accounting/accounts',

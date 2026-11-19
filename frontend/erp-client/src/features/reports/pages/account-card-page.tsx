@@ -12,7 +12,7 @@ import { Badge } from '@/shared/components/ui/badge';
 import { PermissionGuard } from '@/app/guards/permission-guard';
 import { PERMISSIONS } from '@/core/auth/permissions';
 import { getAccountCard } from '@/core/accounting/reports.service';
-import { ReportFilterBar } from '@/features/reports/components/report-filter-bar';
+import { ReportPageShell } from '@/features/reports/components/report-page-shell';
 import { useReportFilters } from '@/features/reports/use-report-filters';
 import { FinancialTable, MoneyCell, BalanceCell, TotalsFooter, DocNumberCell, DescriptionCell } from '@/features/reports/components/financial-table';
 import { formatAmount } from '@/core/accounting/documents.service';
@@ -50,22 +50,21 @@ const AccountCardContent: React.FC = () => {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
-    <div className="space-y-4" data-testid="account-card-page">
-      <div>
-        <h1 className="flex items-center gap-2 text-lg font-black text-foreground">
-          <NotebookText className="size-5 text-primary" aria-hidden />
-          کارت حساب
-        </h1>
-        <p className="mt-0.5 text-xs text-muted-foreground">گردش ردیفی با مانده تراکمی از backend — مانده‌ها با جهت واقعی نشان داده می‌شوند</p>
-      </div>
-
-      <ReportFilterBar
-        values={values}
-        onValuesChange={updateFilters}
-        enabled={['account', 'year', 'period', 'dates', 'detail', 'costCenter', 'project', 'party', 'currency']}
-        testIdPrefix="card"
-      />
-
+    <ReportPageShell
+      title="کارت حساب"
+      description="گردش ردیفی حساب انتخابی با مانده تراکمی و جهت واقعی — خروجی سرور همان محاسبات رسمی است"
+      icon={<NotebookText className="size-5 text-primary" aria-hidden />}
+      filters={{ values: values, companyId, updateFilters, setPage }}
+      filterKinds={['account', 'year', 'period', 'dates', 'detail', 'costCenter', 'project', 'party', 'currency']}
+      onRun={() => void card.refetch()}
+      loading={card.isFetching}
+      error={card.isError}
+      onRetry={() => void card.refetch()}
+      generatedAt={card.dataUpdatedAt || undefined}
+      exportReportName={values.accountId ? 'accountcard' : undefined}
+      exportParams={values.accountId ? { fiscalYearId: values.fiscalYearId, fiscalPeriodId: values.fiscalPeriodId, from: values.from, to: values.to, accountId: values.accountId, costCenterId: values.costCenterId, projectId: values.projectId, partyId: values.partyId, currencyCode: values.currencyCode } : undefined}
+      testIdPrefix="card"
+    >
       {!values.accountId ? (
         <Card>
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
@@ -128,7 +127,7 @@ const AccountCardContent: React.FC = () => {
           </div>
         </>
       )}
-    </div>
+    </ReportPageShell>
   );
 };
 

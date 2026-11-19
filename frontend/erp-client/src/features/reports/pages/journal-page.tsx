@@ -11,7 +11,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { PermissionGuard } from '@/app/guards/permission-guard';
 import { PERMISSIONS } from '@/core/auth/permissions';
 import { getLedgerJournal } from '@/core/accounting/reports.service';
-import { ReportFilterBar } from '@/features/reports/components/report-filter-bar';
+import { ReportPageShell } from '@/features/reports/components/report-page-shell';
 import { useReportFilters } from '@/features/reports/use-report-filters';
 import { FinancialTable, MoneyCell, DescriptionCell, TotalsFooter, DocNumberCell } from '@/features/reports/components/financial-table';
 import { formatAmount } from '@/core/accounting/documents.service';
@@ -23,6 +23,7 @@ const PAGE_SIZE = 25;
 
 const JournalContent: React.FC = () => {
   const { values, updateFilters, setPage, companyId } = useReportFilters();
+
   const page = values.page ?? 1;
 
   const report = useQuery({
@@ -42,22 +43,21 @@ const JournalContent: React.FC = () => {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
-    <div className="space-y-4" data-testid="journal-page">
-      <div>
-        <h1 className="flex items-center gap-2 text-lg font-black text-foreground">
-          <BookOpenText className="size-5 text-primary" aria-hidden />
-          دفتر روزنامه
-        </h1>
-        <p className="mt-0.5 text-xs text-muted-foreground">اسناد قطعی‌شده به ترتیب تاریخ — صفحه‌بندی سمت سرور (server-side pagination)</p>
-      </div>
-
-      <ReportFilterBar
-        values={values}
-        onValuesChange={updateFilters}
-        enabled={['year', 'period', 'dates', 'account']}
-        testIdPrefix="journal"
-      />
-
+    <ReportPageShell
+      title="دفتر روزنامه"
+      description="اسناد قطعی‌شده به ترتیب تاریخ با ردیف‌های هر سند — صفحه‌بندی و جمع دوره سمت سرور"
+      icon={<BookOpenText className="size-5 text-primary" aria-hidden />}
+      filters={{ values: values, companyId, updateFilters, setPage }}
+      filterKinds={['year', 'period', 'dates', 'account']}
+      onRun={() => void report.refetch()}
+      loading={report.isFetching}
+      error={report.isError}
+      onRetry={() => void report.refetch()}
+      generatedAt={report.dataUpdatedAt || undefined}
+      exportReportName="journal"
+      exportParams={{ fiscalYearId: values.fiscalYearId, from: values.from, to: values.to, accountId: values.accountId }}
+      testIdPrefix="journal"
+    >
       <Card>
         <CardContent className="p-0">
           <FinancialTable<JournalEntryDto>
@@ -101,7 +101,7 @@ const JournalContent: React.FC = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </ReportPageShell>
   );
 };
 

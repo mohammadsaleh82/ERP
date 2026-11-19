@@ -104,3 +104,33 @@
     margin: 10mm;
   }
 }
+
+/* ── قالب چاپ گزارش‌های مالی (فاز ۸) — RTL، بدون کنترل‌های صفحه ─── */
+@media print {
+  .report-no-print,
+  header nav,
+  aside {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+  }
+  .report-print-header h1 {
+    font-size: 14pt;
+  }
+  table {
+    font-size: 9pt !important;
+    width: 100% !important;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tr {
+    page-break-inside: avoid;
+  }
+  /* متن‌های رنگی روی کاغذ سیاه‌وسفید خوانا بمانند */
+  .text-sky-700, .text-amber-700 {
+    color: #000 !important;
+    font-weight: 700 !important;
+  }
+}

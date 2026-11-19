@@ -28,6 +28,7 @@ export const PERMISSIONS = {
   // دفتر و گزارش
   ledgerRead: 'accounting:ledger:read',
   reportsRead: 'accounting:reports:read',
+  reportsClassify: 'accounting:reports:classify',
   dimensionsRead: 'accounting:dimensions:read',
   auditRead: 'accounting:audit:read',
   // سال/دوره مالی

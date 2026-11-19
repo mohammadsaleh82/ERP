@@ -12,7 +12,7 @@ import { Button } from '@/shared/components/ui/button';
 import { PermissionGuard } from '@/app/guards/permission-guard';
 import { PERMISSIONS } from '@/core/auth/permissions';
 import { getLedgerGeneral } from '@/core/accounting/reports.service';
-import { ReportFilterBar } from '@/features/reports/components/report-filter-bar';
+import { ReportPageShell } from '@/features/reports/components/report-page-shell';
 import { useReportFilters } from '@/features/reports/use-report-filters';
 import { FinancialTable, MoneyCell, BalanceCell, TotalsFooter, DescriptionCell } from '@/features/reports/components/financial-table';
 import { digitsToPersian } from '@/shared/utils/number';
@@ -42,17 +42,21 @@ const GeneralLedgerContent: React.FC = () => {
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
-    <div className="space-y-4" data-testid="general-ledger-page">
-      <div>
-        <h1 className="flex items-center gap-2 text-lg font-black text-foreground">
-          <Layers className="size-5 text-primary" aria-hidden />
-          دفتر کل
-        </h1>
-        <p className="mt-0.5 text-xs text-muted-foreground">خلاصه گردش و مانده حساب‌ها در بازه — برای گردش سطر به سطر، ردیف را باز کنید</p>
-      </div>
-
-      <ReportFilterBar values={values} onValuesChange={updateFilters} enabled={['year', 'dates', 'account']} testIdPrefix="gl" />
-
+    <ReportPageShell
+      title="دفتر کل"
+      description="مانده اول دوره، گردش بدهکار/بستانکار و مانده پایان هر حساب — صفحه‌بندی واقعی روی حساب‌ها با جمع دوره از سرور"
+      icon={<Layers className="size-5 text-primary" aria-hidden />}
+      filters={{ values: values, companyId, updateFilters, setPage }}
+      filterKinds={['year', 'dates', 'account']}
+      onRun={() => void report.refetch()}
+      loading={report.isFetching}
+      error={report.isError}
+      onRetry={() => void report.refetch()}
+      generatedAt={report.dataUpdatedAt || undefined}
+      exportReportName="generalledger"
+      exportParams={{ fiscalYearId: values.fiscalYearId, from: values.from, to: values.to, accountId: values.accountId }}
+      testIdPrefix="gl"
+    >
       <Card>
         <CardContent className="p-0">
           <FinancialTable<AccountLedgerSummaryDto>
@@ -99,7 +103,7 @@ const GeneralLedgerContent: React.FC = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </ReportPageShell>
   );
 };
 

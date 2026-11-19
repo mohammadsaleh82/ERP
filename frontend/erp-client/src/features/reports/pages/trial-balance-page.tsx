@@ -9,7 +9,7 @@ import { Card, CardContent } from '@/shared/components/ui/card';
 import { PermissionGuard } from '@/app/guards/permission-guard';
 import { PERMISSIONS } from '@/core/auth/permissions';
 import { getTrialBalance } from '@/core/accounting/reports.service';
-import { ReportFilterBar } from '@/features/reports/components/report-filter-bar';
+import { ReportPageShell } from '@/features/reports/components/report-page-shell';
 import { useReportFilters } from '@/features/reports/use-report-filters';
 import { FinancialTable, MoneyCell, DescriptionCell } from '@/features/reports/components/financial-table';
 import { formatAmount } from '@/core/accounting/documents.service';
@@ -19,7 +19,7 @@ import type { TrialBalanceRow } from '@/core/accounting/reports.types';
 const levelLabel = (level: string): string => ({ Group: 'گروه', General: 'کل', Subsidiary: 'معین', Detail: 'تفصیلی' }[level] ?? level);
 
 const TrialBalanceContent: React.FC = () => {
-  const { values, updateFilters, companyId } = useReportFilters();
+  const { values, updateFilters, setPage, companyId } = useReportFilters();
 
   const [accountLevel, setAccountLevel] = React.useState(values.accountLevel ?? 'Detail');
 
@@ -39,32 +39,32 @@ const TrialBalanceContent: React.FC = () => {
   });
 
   return (
-    <div className="space-y-4" data-testid="trial-balance-page">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-lg font-black text-foreground">
-            <Sigma className="size-5 text-primary" aria-hidden />
-            تراز آزمایشی
-          </h1>
-          {report.data && (
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              از {formatToPersianDate(report.data.fromDate)} تا {formatToPersianDate(report.data.toDate)} · سطح {levelLabel(report.data.aggregationLevel)}
-              {report.data.fiscalYearName && ` · ${report.data.fiscalYearName}`}
-            </p>
-          )}
-        </div>
-        <label className="flex items-center gap-1.5 text-xs font-semibold" htmlFor="tb-level">
-          سطح تجمیع
-          <select id="tb-level" value={accountLevel} onChange={(event) => setAccountLevel(event.target.value)} className="h-9 rounded-md border border-border bg-surface px-2 text-xs" data-testid="tb-level">
-            <option value="Group">گروه</option>
-            <option value="General">کل</option>
-            <option value="Subsidiary">معین</option>
-            <option value="Detail">تفصیلی</option>
-          </select>
-        </label>
+    <ReportPageShell
+      title="تراز آزمایشی"
+      description={`تراز بدهکار/بستانکار همه حساب‌ها ${report.data ? `از ${formatToPersianDate(report.data.fromDate)} تا ${formatToPersianDate(report.data.toDate)}` : 'در بازه انتخابی'} — جمع‌ها و اختلاف از محاسبات backend`}
+      icon={<Sigma className="size-5 text-primary" aria-hidden />}
+      filters={{ values: values, companyId, updateFilters, setPage }}
+      filterKinds={['year', 'dates', 'costCenter', 'project', 'party', 'currency']}
+      onRun={() => void report.refetch()}
+      loading={report.isFetching}
+      error={report.isError}
+      onRetry={() => void report.refetch()}
+      generatedAt={report.dataUpdatedAt || undefined}
+      exportReportName="trialbalance"
+      exportParams={{ fiscalYearId: values.fiscalYearId, fiscalPeriodId: values.fiscalPeriodId, from: values.from, to: values.to, accountLevel }}
+      testIdPrefix="tb"
+    >
+      {/* سطح تجمیع — گزارش فقط با سطح انتخابی اجرا می‌شود */}
+      <div className="report-no-print -mt-2 mb-2 flex items-center gap-1.5 text-xs font-semibold">
+        سطح تجمیع
+        <select id="tb-level" value={accountLevel} onChange={(event) => setAccountLevel(event.target.value)} className="h-9 rounded-md border border-border bg-surface px-2 text-xs" data-testid="tb-level">
+          <option value="Group">گروه</option>
+          <option value="General">کل</option>
+          <option value="Subsidiary">معین</option>
+          <option value="Detail">تفصیلی</option>
+        </select>
+        {report.data?.fiscalYearName && <span className="text-muted-foreground">· {report.data.fiscalYearName}</span>}
       </div>
-
-      <ReportFilterBar values={values} onValuesChange={updateFilters} enabled={['year', 'dates', 'costCenter', 'project', 'party', 'currency']} testIdPrefix="tb" />
 
       {report.data && (
         <div className={`flex items-center gap-2 rounded-md border px-3 py-2 text-xs ${report.data.isBalanced ? 'border-success/40 bg-success/5 text-success' : 'border-danger/40 bg-danger/5 text-danger'}`} data-testid="tb-balance-banner">
@@ -98,7 +98,7 @@ const TrialBalanceContent: React.FC = () => {
           />
         </CardContent>
       </Card>
-    </div>
+    </ReportPageShell>
   );
 };
 
