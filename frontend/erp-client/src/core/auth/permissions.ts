@@ -14,6 +14,7 @@ export const PERMISSIONS = {
   accountsCreate: 'accounting:accounts:create',
   accountsUpdate: 'accounting:accounts:update',
   accountsDeactivate: 'accounting:accounts:deactivate',
+  accountsDelete: 'accounting:accounts:delete',
   // اسناد
   documentsRead: 'accounting:documents:read',
   documentsCreate: 'accounting:documents:create',
@@ -35,6 +36,7 @@ export const PERMISSIONS = {
   periodClose: 'accounting:periods:close',
   fiscalYearClose: 'accounting:fiscalyear:close',
   fiscalYearReopen: 'accounting:fiscalyear:reopen',
+  settingsRead: 'accounting:settings:read',
   settingsUpdate: 'accounting:settings:update',
 } as const;
 

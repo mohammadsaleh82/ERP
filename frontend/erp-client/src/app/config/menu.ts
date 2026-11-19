@@ -15,6 +15,9 @@ import {
   Building2,
   ShieldCheck,
   Settings,
+  ListTree,
+  CalendarRange,
+  Settings2,
 } from 'lucide-react';
 import { PERMISSIONS } from '@/core/auth/permissions';
 
@@ -29,6 +32,9 @@ export interface MenuItem {
 export const menuItems: MenuItem[] = [
   { label: 'داشبورد مدیریتی', href: '/', icon: LayoutDashboard },
   { label: 'حسابداری مالی', href: '/accounting', icon: Receipt, permissions: [PERMISSIONS.documentsRead, PERMISSIONS.accountsRead] },
+  { label: 'کدینگ حساب‌ها', href: '/accounting/accounts', icon: ListTree, permissions: [PERMISSIONS.accountsRead] },
+  { label: 'سال مالی و دوره‌ها', href: '/accounting/fiscal-years', icon: CalendarRange, permissions: [PERMISSIONS.fiscalYearsRead] },
+  { label: 'تنظیمات حسابداری', href: '/accounting/settings', icon: Settings2, permissions: [PERMISSIONS.settingsRead] },
   { label: 'خزانه‌داری و چک', href: '/treasury', icon: Landmark, permissions: [PERMISSIONS.accountsRead] },
   { label: 'انبار و موجودی', href: '/inventory', icon: Boxes },
   { label: 'فروش و بازرگانی', href: '/sales', icon: TrendingUp },
@@ -45,6 +51,9 @@ export const menuItems: MenuItem[] = [
 export const routeTitles: Record<string, string> = {
   '/': 'داشبورد مدیریتی',
   '/accounting': 'حسابداری مالی',
+  '/accounting/accounts': 'حسابداری مالی — کدینگ حساب‌ها',
+  '/accounting/fiscal-years': 'حسابداری مالی — سال مالی و دوره‌ها',
+  '/accounting/settings': 'حسابداری مالی — تنظیمات حسابداری',
   '/treasury': 'خزانه‌داری و چک',
   '/inventory': 'انبار و موجودی',
   '/sales': 'فروش و بازرگانی',

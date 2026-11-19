@@ -13,6 +13,9 @@ import { CompanySelectionPage } from '@/features/organization/pages/company-sele
 import { DashboardPage } from '@/features/dashboard/pages/dashboard-page';
 
 import { AccountingPage } from '@/features/accounting';
+import { AccountsPage } from '@/features/accounts';
+import { FiscalYearsPage } from '@/features/fiscal';
+import { AccountingSettingsPage } from '@/features/accounting/pages/accounting-settings-page';
 import { TreasuryPage } from '@/features/treasury';
 import { InventoryPage } from '@/features/inventory';
 import { SalesPage } from '@/features/sales';
@@ -71,6 +74,30 @@ export const router = createBrowserRouter([
                 element: (
                   <PermissionGuard permissions={[PERMISSIONS.documentsRead, PERMISSIONS.accountsRead]}>
                     <AccountingPage />
+                  </PermissionGuard>
+                ),
+              },
+              {
+                path: '/accounting/accounts',
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.accountsRead]}>
+                    <AccountsPage />
+                  </PermissionGuard>
+                ),
+              },
+              {
+                path: '/accounting/fiscal-years',
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.fiscalYearsRead]}>
+                    <FiscalYearsPage />
+                  </PermissionGuard>
+                ),
+              },
+              {
+                path: '/accounting/settings',
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.settingsRead]}>
+                    <AccountingSettingsPage />
                   </PermissionGuard>
                 ),
               },
