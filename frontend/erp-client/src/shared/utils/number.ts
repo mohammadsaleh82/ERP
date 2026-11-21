@@ -36,7 +36,7 @@ export function parseNumberInput(raw: string): number | null {
   if (raw == null) return null;
   const cleaned = digitsToEnglish(String(raw))
     .replace(/[,،\s\u066C]/g, '')
-    .replace(/[٫\/]/g, '.')
+    .replace(/[٫/]/g, '.')
     .replace(/[^\d.\-+]/g, '');
   if (cleaned === '' || cleaned === '-' || cleaned === '+') return null;
   const parsed = Number(cleaned);
@@ -46,7 +46,7 @@ export function parseNumberInput(raw: string): number | null {
 /** آیا متن فقط عدد (با جداکننده‌های مجاز) است؟ — strict: حروف ناشناخته ممنوع */
 export function isNumericInput(raw: string): boolean {
   if (raw == null || String(raw).trim() === '') return false;
-  const normalized = digitsToEnglish(String(raw)).replace(/[,،\s٫\/\u066C]/g, '');
+  const normalized = digitsToEnglish(String(raw)).replace(/[,،\s٫/\u066C]/g, '');
   if (normalized === '' || normalized === '-' || normalized === '+') return false;
   return /^[+-]?\d+(\.\d+)?$/.test(normalized);
 }

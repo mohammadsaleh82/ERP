@@ -1,0 +1,9 @@
+statements-index-D6N5iJK3.js: raw=470.7KB gzip=132.4KB
+index-D2S6N8sc.js: raw=339.6KB gzip=106.9KB
+vendor-react-AKz2E6hE.js: raw=104.1KB gzip=35.0KB
+vendor-ui-2uvo3u-E.js: raw=103.1KB gzip=26.7KB
+vendor-query-CxOVb0oo.js: raw=98.8KB gzip=33.7KB
+types-Bnh_Ut-X.js: raw=88.9KB gzip=25.0KB
+documents.service-BhI6sEii.js: raw=37.0KB gzip=14.8KB
+reports-tRVRvI11.js: raw=36.2KB gzip=7.7KB
+total chunks: 43

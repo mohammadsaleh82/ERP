@@ -20,7 +20,7 @@ export interface NumberInputProps
  * state فرم همیشه مقدار واقعی (number|null) است، نه متن فرمت‌شده.
  */
 export const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
-  ({ value, onChange, grouping = true, min, max, step, className, onBlur, disabled, ...props }, ref) => {
+  ({ value, onChange, grouping = true, min, max, className, onBlur, disabled, ...props }, ref) => {
     const [displayText, setDisplayText] = React.useState<string>(() => (value === null ? '' : formatNumber(value)));
 
     React.useEffect(() => {

@@ -65,6 +65,12 @@ export const useUnsavedChangesGuard = ({ dirty, title = 'خروج با تغیی�
     };
   }, [dirty]);
 
+  /** اجازه صریح یک ناوبری برنامه‌ای (مثل navigate پس از ذخیره موفق) بدون دیالوگ */
+  const allowNextNavigation = React.useCallback(() => {
+    restoringRef.current = true;
+    setTimeout(() => { restoringRef.current = false; }, 0);
+  }, []);
+
   const confirmNavigation = React.useCallback(() => {
     restoringRef.current = true;
     const pending = pendingRef.current;
@@ -89,5 +95,5 @@ export const useUnsavedChangesGuard = ({ dirty, title = 'خروج با تغیی�
     />
   );
 
-  return { guardDialog };
+  return { guardDialog, allowNextNavigation };
 };

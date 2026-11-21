@@ -9,7 +9,7 @@ import { queryClient } from '@/app/providers/query-provider';
 let mock: AxiosMockAdapter;
 
 const token = () => 'a'.repeat(20) + '.' + 'b'.repeat(20) + '.' + 'c'.repeat(20);
-const token2 = () => 'x'.repeat(20) + '.' + 'y'.repeat(20) + '.' + 'z'.repeat(20);
+
 
 beforeEach(() => {
   mock = new AxiosMockAdapter(apiClient, { onNoMatch: 'throwException' });

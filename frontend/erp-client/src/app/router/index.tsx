@@ -110,67 +110,131 @@ export const router = createBrowserRouter([
               },
               {
                 path: '/accounting/reports/journal',
-                element: page(() => import('@/features/reports'), 'JournalPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'JournalPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/general-ledger',
-                element: page(() => import('@/features/reports'), 'GeneralLedgerPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'GeneralLedgerPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/general-ledger/:accountId',
-                element: page(() => import('@/features/reports'), 'LedgerTransactionsPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'LedgerTransactionsPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/subsidiary',
-                element: page(() => import('@/features/reports'), 'SubsidiaryLedgerPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'SubsidiaryLedgerPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/turnover',
-                element: page(() => import('@/features/reports'), 'AccountTurnoverPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'AccountTurnoverPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/account-card',
-                element: page(() => import('@/features/reports'), 'AccountCardPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'AccountCardPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/balances',
-                element: page(() => import('@/features/reports'), 'AccountBalancesPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'AccountBalancesPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/trial-balance',
-                element: page(() => import('@/features/reports'), 'TrialBalancePage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'TrialBalancePage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/dimensions',
-                element: page(() => import('@/features/reports'), 'DimensionsTurnoverPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'DimensionsTurnoverPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/dimensions/combined',
-                element: page(() => import('@/features/reports'), 'CombinedDimensionsPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports'), 'CombinedDimensionsPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/balance-sheet',
-                element: page(() => import('@/features/reports/statements-index'), 'BalanceSheetPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports/statements-index'), 'BalanceSheetPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/profit-loss',
-                element: page(() => import('@/features/reports/statements-index'), 'ProfitLossPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports/statements-index'), 'ProfitLossPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/cash-flow',
-                element: page(() => import('@/features/reports/statements-index'), 'CashFlowPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports/statements-index'), 'CashFlowPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/receivables',
-                element: <PartyLedgerWrapper kind="receivables" />,
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    <PartyLedgerWrapper kind="receivables" />
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/payables',
-                element: <PartyLedgerWrapper kind="payables" />,
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    <PartyLedgerWrapper kind="payables" />
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/reports/aging',
-                element: page(() => import('@/features/reports/statements-index'), 'AgingPage'),
+                element: (
+                  <PermissionGuard permissions={[PERMISSIONS.reportsRead, PERMISSIONS.ledgerRead]}>
+                    {page(() => import('@/features/reports/statements-index'), 'AgingPage')}
+                  </PermissionGuard>
+                ),
               },
               {
                 path: '/accounting/accounts',

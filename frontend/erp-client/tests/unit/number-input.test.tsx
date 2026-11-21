@@ -5,8 +5,8 @@ import { NumberInput } from '@/shared/components/forms/number-input';
 
 describe('NumberInput', () => {
   it('parses mixed Persian/English digits into a number', async () => {
-    const user = userEvent.setup();
     const onChange = vi.fn();
+    const user = userEvent.setup();
     render(<NumberInput value={null} onChange={onChange} />);
     const input = screen.getByRole('textbox');
 
@@ -15,8 +15,8 @@ describe('NumberInput', () => {
   });
 
   it('clamps to min on blur', async () => {
-    const user = userEvent.setup();
     const onChange = vi.fn();
+    const user = userEvent.setup();
     render(<NumberInput value={null} onChange={onChange} min={5} />);
     const input = screen.getByRole('textbox');
 
@@ -26,8 +26,8 @@ describe('NumberInput', () => {
   });
 
   it('formats the display with grouping after blur', async () => {
-    const user = userEvent.setup();
     const onChange = vi.fn();
+    const user = userEvent.setup();
     render(<NumberInput value={null} onChange={onChange} />);
     const input = screen.getByRole('textbox');
 
@@ -37,7 +37,6 @@ describe('NumberInput', () => {
   });
 
   it('respects negative values when provided', async () => {
-    const user = userEvent.setup();
     const onChange = vi.fn();
     render(<NumberInput value={-42} onChange={onChange} />);
     expect((screen.getByRole('textbox') as HTMLInputElement).value).toBe('-42');

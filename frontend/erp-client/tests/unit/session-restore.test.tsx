@@ -1,5 +1,5 @@
 /** بازیابی silent نشست در boot + مسیر مستقیم به route محافظت‌شده */
-import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
+import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
 import { render, screen } from '@testing-library/react';

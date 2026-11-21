@@ -3,7 +3,6 @@ import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
 import { render, screen } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { apiClient } from '@/core/api/client';
 import { useAuthStore } from '@/core/auth/auth.store';
 import { useCompanyStore } from '@/core/company/company.store';

@@ -22,7 +22,6 @@ import {
   DimensionsTurnoverPage,
   CombinedDimensionsPage,
 } from '@/features/reports';
-import { getFinancialDimensions } from '@/core/accounting/reports.service';
 
 vi.mock('@/core/notifications/toast', () => ({
   toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },

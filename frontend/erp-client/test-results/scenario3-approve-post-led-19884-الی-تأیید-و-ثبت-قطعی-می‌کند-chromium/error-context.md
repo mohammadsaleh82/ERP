@@ -1,0 +1,172 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: scenario3-approve-post-ledger.spec.ts >> سناریوی ۳ — تأیید، ثبت قطعی، دفتر کل >> ایجادکننده نمی‌تواند تأیید کند (SOD)؛ مدیر مالی تأیید و ثبت قطعی می‌کند
+- Location: tests/e2e/scenario3-approve-post-ledger.spec.ts:43:3
+
+# Error details
+
+```
+Test timeout of 30000ms exceeded.
+```
+
+# Page snapshot
+
+```yaml
+- generic [ref=f1e2]:
+  - generic [ref=f1e3]:
+    - link "پرش به محتوای اصلی" [ref=f1e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - complementary [ref=f1e6]:
+      - generic [ref=f1e7]:
+        - generic [ref=f1e8]:
+          - generic [ref=f1e9]: E
+          - generic [ref=f1e10]:
+            - generic [ref=f1e11]: سامانه سازمانی ERP
+            - generic [ref=f1e12]: آریا صنعت · گروه آریا
+        - button "جمع کردن منو" [ref=f1e13] [cursor=pointer]
+      - navigation "منوی اصلی" [ref=f1e16]:
+        - link "داشبورد مدیریتی" [ref=f1e17] [cursor=pointer]:
+          - /url: /
+        - link "حسابداری مالی" [ref=f1e25] [cursor=pointer]:
+          - /url: /accounting
+          - generic [ref=f1e30]: (صفحه جاری)
+        - link "اسناد حسابداری" [ref=f1e31] [cursor=pointer]:
+          - /url: /accounting/documents
+          - generic [ref=f1e36]: (صفحه جاری)
+        - link "دفتر روزنامه" [ref=f1e37] [cursor=pointer]:
+          - /url: /accounting/reports/journal
+        - link "دفتر کل" [ref=f1e42] [cursor=pointer]:
+          - /url: /accounting/reports/general-ledger
+        - link "دفتر معین" [ref=f1e49] [cursor=pointer]:
+          - /url: /accounting/reports/subsidiary
+        - link "کارت حساب" [ref=f1e55] [cursor=pointer]:
+          - /url: /accounting/reports/account-card
+        - link "گردش حساب" [ref=f1e60] [cursor=pointer]:
+          - /url: /accounting/reports/turnover
+        - link "مانده حساب" [ref=f1e66] [cursor=pointer]:
+          - /url: /accounting/reports/balances
+        - link "تراز آزمایشی" [ref=f1e73] [cursor=pointer]:
+          - /url: /accounting/reports/trial-balance
+        - link "ترازنامه" [ref=f1e78] [cursor=pointer]:
+          - /url: /accounting/reports/balance-sheet
+        - link "سود و زیان" [ref=f1e83] [cursor=pointer]:
+          - /url: /accounting/reports/profit-loss
+        - link "جریان وجوه نقد" [ref=f1e89] [cursor=pointer]:
+          - /url: /accounting/reports/cash-flow
+        - link "بدهکاران" [ref=f1e95] [cursor=pointer]:
+          - /url: /accounting/reports/receivables
+        - link "بستانکاران" [ref=f1e102] [cursor=pointer]:
+          - /url: /accounting/reports/payables
+        - link "گزارش سنی مطالبات" [ref=f1e108] [cursor=pointer]:
+          - /url: /accounting/reports/aging
+        - link "کدینگ حساب‌ها" [ref=f1e114] [cursor=pointer]:
+          - /url: /accounting/accounts
+        - link "سال مالی و دوره‌ها" [ref=f1e120] [cursor=pointer]:
+          - /url: /accounting/fiscal-years
+        - link "تنظیمات حسابداری" [ref=f1e125] [cursor=pointer]:
+          - /url: /accounting/settings
+        - link "خزانه‌داری و چک" [ref=f1e131] [cursor=pointer]:
+          - /url: /treasury
+        - link "انبار و موجودی" [ref=f1e136] [cursor=pointer]:
+          - /url: /inventory
+        - link "فروش و بازرگانی" [ref=f1e149] [cursor=pointer]:
+          - /url: /sales
+        - link "خرید و تدارکات" [ref=f1e155] [cursor=pointer]:
+          - /url: /purchasing
+        - link "طرف‌حساب‌ها" [ref=f1e162] [cursor=pointer]:
+          - /url: /parties
+        - link "حقوق و دستمزد" [ref=f1e169] [cursor=pointer]:
+          - /url: /payroll
+        - link "گزارش‌های جامع" [ref=f1e175] [cursor=pointer]:
+          - /url: /reporting
+        - link "ساختار سازمان" [ref=f1e180] [cursor=pointer]:
+          - /url: /organization
+        - link "کاربران و امنیت" [ref=f1e187] [cursor=pointer]:
+          - /url: /identity
+        - link "تنظیمات و پلن‌ها" [ref=f1e193] [cursor=pointer]:
+          - /url: /settings
+      - paragraph [ref=f1e200]: طراحی‌شده برای مقیاس سازمانی
+    - generic [ref=f1e201]:
+      - banner [ref=f1e202]:
+        - generic [ref=f1e203]:
+          - button "انتخاب شرکت فعال" [ref=f1e204] [cursor=pointer]:
+            - generic [ref=f1e208]: آریا صنعت
+            - generic [ref=f1e209]: (گروه آریا)
+          - generic [ref=f1e212]: سال مالی ۱۴۰۴
+        - generic [ref=f1e215]:
+          - button "جست‌وجوی سراسری" [ref=f1e216] [cursor=pointer]:
+            - generic [ref=f1e220]: جست‌وجو (سند، حساب…)
+            - generic [ref=f1e221]: Ctrl K
+          - button "تم تاریک" [ref=f1e222] [cursor=pointer]
+          - button "اعلان‌ها" [disabled]
+          - button "منوی کاربری" [ref=f1e226] [cursor=pointer]:
+            - img "accountant@aria.ir" [ref=f1e227]: a
+            - generic [ref=f1e228]:
+              - generic [ref=f1e229]: accountant@aria.ir
+              - generic [ref=f1e230]: accountant@aria.ir
+      - main [ref=f1e233]:
+        - navigation "مسیر جاری" [ref=f1e234]:
+          - list [ref=f1e235]:
+            - listitem [ref=f1e236]:
+              - generic [ref=f1e237]: آریا صنعت
+            - listitem [ref=f1e238]:
+              - link "حسابداری مالی" [ref=f1e241] [cursor=pointer]:
+                - /url: /accounting
+            - listitem [ref=f1e242]:
+              - link "حسابداری مالی — اسناد حسابداری" [ref=f1e245] [cursor=pointer]:
+                - /url: /accounting/documents
+            - listitem [ref=f1e246]:
+              - generic [ref=f1e249]: doc-101-c-aria
+        - generic [ref=f1e251]:
+          - generic [ref=f1e252]:
+            - generic [ref=f1e253]:
+              - button "بازگشت به لیست" [ref=f1e254] [cursor=pointer]
+              - generic [ref=f1e257]:
+                - heading "سند ۱۰۱ در انتظار تأیید" [level=1] [ref=f1e258]:
+                  - text: سند ۱۰۱
+                  - generic [ref=f1e259]: در انتظار تأیید
+                - paragraph [ref=f1e260]: ۱۴۰۵/۰۱/۱۳ · عادی · ارز IRR
+            - generic [ref=f1e261]:
+              - button "تاریخچه" [ref=f1e262] [cursor=pointer]
+              - button "چاپ" [ref=f1e267] [cursor=pointer]
+          - generic [ref=f1e272]:
+            - heading "فروش اعتباری E2E" [level=2] [ref=f1e274]
+            - table [ref=f1e277]:
+              - rowgroup [ref=f1e278]:
+                - row [ref=f1e279]:
+                  - columnheader "ردیف" [ref=f1e280]
+                  - columnheader "کد حساب" [ref=f1e281]
+                  - columnheader "نام حساب" [ref=f1e282]
+                  - columnheader "شرح" [ref=f1e283]
+                  - columnheader "بدهکار" [ref=f1e284]
+                  - columnheader "بستانکار" [ref=f1e285]
+              - rowgroup [ref=f1e286]:
+                - row [ref=f1e287]:
+                  - cell "۱" [ref=f1e288]
+                  - cell "110101" [ref=f1e289]
+                  - cell "صندوق" [ref=f1e290]
+                  - cell "فروش اعتباری E2E" [ref=f1e291]
+                  - cell "850,000.25" [ref=f1e292]
+                  - cell "—" [ref=f1e293]
+                - row [ref=f1e294]:
+                  - cell "۲" [ref=f1e295]
+                  - cell "400101" [ref=f1e296]
+                  - cell "درآمد فروش" [ref=f1e297]
+                  - cell "فروش اعتباری E2E" [ref=f1e298]
+                  - cell "—" [ref=f1e299]
+                  - cell "850,000.25" [ref=f1e300]
+                - row [ref=f1e301]:
+                  - cell "جمع کل" [ref=f1e302]
+                  - cell "850,000.25" [ref=f1e303]
+                  - cell "850,000.25" [ref=f1e304]
+          - generic [ref=f1e305]:
+            - generic [ref=f1e306]: "ایجاد: accountant@aria.ir · ۱۴۰۵/۰۸/۳۰, ۱۰:۴۸"
+            - button "تأیید" [ref=f1e308] [cursor=pointer]
+  - region "Notifications alt+T"
+```

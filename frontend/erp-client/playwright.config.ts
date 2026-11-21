@@ -7,7 +7,7 @@ import { defineConfig, devices } from '@playwright/test';
  *   npx playwright install chromium
  *   npm run test:e2e
  */
-const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
+const baseURL = process.env.E2E_BASE_URL ?? (process.env.E2E_PREVIEW ? 'http://localhost:4173' : 'http://localhost:3000');
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -28,7 +28,7 @@ export default defineConfig({
   webServer: process.env.E2E_NO_SERVER
     ? undefined
     : {
-        command: 'npm run dev',
+        command: process.env.E2E_PREVIEW ? 'npm run preview -- --port 4173 --strictPort' : 'npm run dev',
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

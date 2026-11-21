@@ -5,20 +5,19 @@
  */
 import { describe, expect, it, beforeEach, afterEach, vi } from 'vitest';
 import AxiosMockAdapter from 'axios-mock-adapter';
-import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
-import { MemoryRouter, Routes, Route, Outlet } from 'react-router-dom';
+import { render, screen, fireEvent, waitFor, within, act } from '@testing-library/react';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { apiClient } from '@/core/api/client';
 import { useAuthStore } from '@/core/auth/auth.store';
 import { useCompanyStore } from '@/core/company/company.store';
 import { AppLayout } from '@/app/layouts/app-layout';
-import { Header } from '@/shared/components/layout/header';
 import { Sidebar } from '@/shared/components/layout/sidebar';
 import { VoucherForm } from '@/features/documents/components/voucher-form';
 import { LoginPage } from '@/features/identity/pages/login-page';
 import { useUnsavedChangesGuard } from '@/shared/hooks/use-unsaved-changes';
 import { login } from '@/core/auth/auth.service';
-import { toast } from '@/core/notifications/toast';
+
 
 vi.mock('@/core/notifications/toast', () => ({
   toast: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
@@ -150,6 +149,24 @@ describe('محافظ تغییرات ذخیره‌نشده', () => {
     render(<Harness dirty={false} />);
     fireEvent.click(screen.getByRole('button', { name: 'nav' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('hook: allowNextNavigation یک ناوبری را بدون دیالوگ عبور می‌دهد (رگرسیون ذخیره→هدایت)', async () => {
+    const Harness: React.FC<{ dirty: boolean; onReady: (allow: () => void) => void }> = ({ dirty, onReady }) => {
+      const { guardDialog, allowNextNavigation } = useUnsavedChangesGuard({ dirty });
+      onReady(allowNextNavigation);
+      return (
+        <div>
+          <button type="button" onClick={() => window.history.pushState({}, '', '/other')}>nav</button>
+          {guardDialog}
+        </div>
+      );
+    };
+    let allow: (() => void) | null = null;
+    const { getByRole } = render(<Harness dirty onReady={(fn) => { allow = fn; }} />);
+    act(() => { allow?.(); });
+    fireEvent.click(getByRole('button', { name: 'nav' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
   it('فرم سند: تایپ → dirty و رهگیری ناوبری؛ پس از ذخیره موفق → رهگیری برداشته می‌شود', async () => {

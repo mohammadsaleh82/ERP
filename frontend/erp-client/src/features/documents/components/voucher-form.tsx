@@ -99,8 +99,10 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({ editingDocument, onSav
     }),
     [editingDocument],
   );
-  const isDirty = formSignature !== baselineSignature;
-  const { guardDialog } = useUnsavedChangesGuard({ dirty: isDirty, title: 'خروج از سند نیمه‌کاره' });
+  /* پس از ذخیره موفق، امضای فعلی «تمیز» است تا ناوبری onSaved توسط گارد رهگیری نشود (فاز ۱۰) */
+  const savedSignatureRef = React.useRef<string | null>(null);
+  const isDirty = formSignature !== baselineSignature && formSignature !== savedSignatureRef.current;
+  const { guardDialog, allowNextNavigation } = useUnsavedChangesGuard({ dirty: isDirty, title: 'خروج از سند نیمه‌کاره' });
 
   const totals = React.useMemo(() => computeTotals(lines), [lines]);
   const periodCheck = React.useMemo(
@@ -197,6 +199,9 @@ export const VoucherForm: React.FC<VoucherFormProps> = ({ editingDocument, onSav
         toast.success('پیش‌نویس ذخیره شد', 'برای ثبت قطعی، سند را ارسال و تأیید کنید.');
       }
       void queryClient.invalidateQueries({ queryKey: ['documents'] });
+      savedSignatureRef.current = formSignature;
+      // ناوبری برنامه‌ای پس از ذخیره موفق نباید گارد را اجرا کند (فاز ۱۰ — E2E یافت)
+      allowNextNavigation();
       onSaved?.(documentId!);
       return documentId;
     } catch (error) {

@@ -26,6 +26,9 @@ export function restoreSession(): Promise<SessionRestoreResult> {
 
     try {
       const session = await refreshSession();
+      // فاز ۱۰ — یافته ممیزی: me باید پس از ست‌شدن access token صدا بخورد، وگرنه
+      // بدون Bearer می‌رود و با backend واقعی 401 → خروج در هر reload.
+      useAuthStore.getState().setSession(session.accessToken, session.tenantId, session.companyId, session.permissions);
       const user = await getCurrentUser();
       store.setAuth(user, session.accessToken, session.tenantId, session.companyId);
       return { restored: true, nextRoute: 'select-company' };

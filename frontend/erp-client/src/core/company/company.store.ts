@@ -1,4 +1,3 @@
-/* eslint-disable react-refresh/only-export-components */
 import { create } from 'zustand';
 import type { UserTenantDto } from '@/core/auth/auth.service';
 
@@ -37,6 +36,29 @@ interface CompanyState {
 const SIDEBAR_KEY = 'erp.sidebarCollapsed';
 const THEME_KEY = 'erp.theme';
 
+/** زمینه کاری فعال در localStorage — فقط شناسه‌ها و نام برای ادامه کار پس از reload (F5)؛ داده مالی ذخیره نمی‌شود */
+const COMPANY_CONTEXT_KEY = 'erp.active-company-context';
+
+export const loadStoredCompanyContext = (): { tenant: TenantSummary | null; company: CompanySummary | null } => {
+  try {
+    const raw = localStorage.getItem(COMPANY_CONTEXT_KEY);
+    if (!raw) return { tenant: null, company: null };
+    const parsed = JSON.parse(raw) as { tenant: TenantSummary | null; company: CompanySummary | null };
+    return { tenant: parsed.tenant ?? null, company: parsed.company ?? null };
+  } catch {
+    return { tenant: null, company: null };
+  }
+};
+
+const persistCompanyContext = (tenant: TenantSummary | null, company: CompanySummary | null) => {
+  try {
+    if (tenant && company) localStorage.setItem(COMPANY_CONTEXT_KEY, JSON.stringify({ tenant, company }));
+    else localStorage.removeItem(COMPANY_CONTEXT_KEY);
+  } catch {
+    /* storage در دسترس نیست */
+  }
+};
+
 /** ترجیحات UI (نه داده مالی) در localStorage — بی‌خطر برای امنیت */
 const loadSidebar = (): boolean => {
   try {
@@ -71,9 +93,11 @@ const toTenantSummaries = (dtos: UserTenantDto[]): TenantSummary[] =>
     })),
   }));
 
+const storedContext = loadStoredCompanyContext();
+
 export const useCompanyStore = create<CompanyState>((set, get) => ({
-  activeTenant: null,
-  activeCompany: null,
+  activeTenant: storedContext.tenant,
+  activeCompany: storedContext.company,
   activeBranchId: null,
   sidebarCollapsed: loadSidebar(),
   theme: loadTheme(),
@@ -82,11 +106,14 @@ export const useCompanyStore = create<CompanyState>((set, get) => ({
   setTenants: (dtos) => set({ tenants: toTenantSummaries(dtos) }),
 
   setCompanyContext: (tenant, company) => {
+    persistCompanyContext(tenant, company);
     set({ activeTenant: tenant, activeCompany: company, activeBranchId: null });
   },
 
-  clearCompanyContext: () =>
-    set({ activeTenant: null, activeCompany: null, activeBranchId: null }),
+  clearCompanyContext: () => {
+    persistCompanyContext(null, null);
+    set({ activeTenant: null, activeCompany: null, activeBranchId: null });
+  },
 
   setActiveBranchId: (branchId) => set({ activeBranchId: branchId }),
 

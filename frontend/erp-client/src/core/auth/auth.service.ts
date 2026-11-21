@@ -6,6 +6,7 @@
 import axios from 'axios';
 import { apiClient } from '@/core/api/client';
 import { ApiError } from '@/core/errors/problem-details';
+import { env } from '@/app/config/env';
 import { useAuthStore, type UserProfile } from '@/core/auth/auth.store';
 
 export interface LoginRequest {
@@ -125,5 +126,7 @@ export async function getUserCompanies(): Promise<UserTenantDto[]> {
 }
 
 function getApiBaseUrl(): string {
-  return (axios.defaults.baseURL as string) || 'https://localhost:5001/api/v1';
+  // فاز ۱۰ — یافته ممیزی: fallback هاردکد 5001 در استقرار واقعی refresh را می‌شکند؛
+  // baseURL واقعی axios (اگر ست شده) و سپس env مرجع است.
+  return (axios.defaults.baseURL as string) || env.apiBaseUrl;
 }
